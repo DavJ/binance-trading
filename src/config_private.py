@@ -1,0 +1,8 @@
+BINANCE_API_KEY=''
+NSAMPLES = 365
+NDIM = 10
+DAYS_BACK_HISTORY = 1
+SYMBOLS = ['AAPL', 'ROKU', 'BA', 'MSFT' , 'TSLA', 'VOW3', 'PG', 'DB1', 'DBK', 'COF', 'BABA', 'BAC']
+DB_FILE = './crypto.db'
+#SYMBOLS = ['AAPL', 'ROKU', 'BA', 'MSFT' , 'IBM']
+#SYMBOLS = ['AAPL', 'ROKU']

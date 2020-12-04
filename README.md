@@ -1,1 +1,1 @@
-# trading
+# binance-trading
