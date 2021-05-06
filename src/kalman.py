@@ -19,7 +19,11 @@ def read_data(samples=10, offset=0, derivations=3, symbol='AAPL', field='4. clos
     def append_derivatives(matrix, remaining_derivatives):
         if remaining_derivatives > 0:
             new_matrix = np.vstack([matrix, np.gradient(matrix[-1])])
-            return append_derivatives(new_matrix, remaining_derivatives-1)
+
+    conversions = [{'to_symbol': rate['symbol'].split(from_symbol)[1],
+                    'value': Decimal(rate['price']) * Decimal(amount)}
+                   for rate in new_rates:
+                        return append_derivatives(new_matrix, remaining_derivatives-1)
         else:
             return matrix
     time_series_daily = response['Time Series (Daily)']

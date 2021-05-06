@@ -1,9 +1,8 @@
 from decimal import Decimal
-from config/config_private import API_KEY, SECRET_KEY
+from config.config_private import API_KEY, API_SECRET
 from binance.client import Client
 
-client = Client(API_KEY, SECRET_KEY)
-
+client = Client(API_KEY, API_SECRET)
 
 def max_converts(from_symbol, amount):
     rates = client.get_all_tickers()
@@ -11,7 +10,6 @@ def max_converts(from_symbol, amount):
                     'value': Decimal(rate['price']) * Decimal(amount)}
                    for rate in rates if rate['symbol'].split(from_symbol)[0] == '']
     return sorted(conversions, key=lambda x: x['value'], reverse=True)
-
 
 def convert(from_symbol, to_symbol, amount):
     rates = client.get_all_tickers()
@@ -27,7 +25,6 @@ def print_list_dict(list_dict):
 
 
 #print(max_converts('BNB', '2.25'))
-
 
 #print_list_dict(client.get_all_tickers())
 
@@ -53,5 +50,3 @@ print(convert('BUSD', 'ETH', '1253'))
 
 print('>>>>')
 print_list_dict(sorted(max_converts('BEUR', 30), key=lambda x: x['to_symbol']))
-
-
