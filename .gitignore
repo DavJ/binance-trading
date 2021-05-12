@@ -1,3 +1,5 @@
+src/bot/settings.ini
+**/settings.ini
 **/config_private.*
 **/*private*
 env/*

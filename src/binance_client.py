@@ -1,5 +1,5 @@
 from binance.client import Client
-from config.config_private import BINANCE_API_KEY, BINANCE_API_SECRET
+from src.bot.config.config_private import BINANCE_API_KEY, BINANCE_API_SECRET
 
 client = Client(BINANCE_API_KEY, BINANCE_API_SECRET)
 products = client.get_exchange_info()
@@ -16,12 +16,7 @@ all_tickers = client.get_all_tickers()
 pass
 
 
-orderbooks = client.get_orderbooks(
-    'binance',  # exchange
-    'ETH',      # base_symbol
-    'BTC',      # quote_symbol
-    10          # limit
-)
+trades = client.get_my_trades(symbol=symbols[0])
 
 
 

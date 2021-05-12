@@ -1,9 +1,9 @@
 import datetime
-from api import utils
+#from api import utils
 from abc import ABC, abstractmethod
-from twisted.internet import reactor
-from strategies.strategy import Strategy
-from models.order import Order
+#from twisted.internet import reactor
+from src.bot.strategies.strategy import Strategy
+from src.bot.models.order import Order
 
 
 class Exchange(ABC):
@@ -32,7 +32,8 @@ class Exchange(ABC):
         self.strategy = strategy
 
     def compute_symbol_pair(self):
-        return utils.format_pair(self.currency, self.asset)
+        #return utils.format_pair(self.currency, self.asset)
+        return self.currency + self.asset
 
     # abstract methods
 
@@ -92,14 +93,16 @@ class Exchange(ABC):
         pass
 
     def start_socket(self):
-        print('Starting WebSocket connection...')
-        self.socketManager.start()
+        #print('Starting WebSocket connection...')
+        #self.socketManager.start()
+        raise NotImplementedError()
 
     def close_socket(self):
-        self.socketManager.stop_socket(self.socket)
-        self.socketManager.close()
-        # properly terminate WebSocket
-        reactor.stop()
+        #self.socketManager.stop_socket(self.socket)
+        #self.socketManager.close()
+        ## properly terminate WebSocket
+        #reactor.stop()
+       raise NotImplementedError()
 
     @abstractmethod
     def start_symbol_ticker_socket(self, symbol: str):

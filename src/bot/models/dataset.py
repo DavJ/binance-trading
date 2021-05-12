@@ -1,9 +1,9 @@
 from datetime import datetime
 
-from api import utils
-from models.model import AbstractModel
-from models.exchange import Exchange
-from models.currency import Currency
+#from api import utils
+from .model import AbstractModel
+from .exchange import Exchange
+from .currency import Currency
 
 
 class Dataset(AbstractModel):

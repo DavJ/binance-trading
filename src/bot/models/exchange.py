@@ -1,9 +1,9 @@
 import datetime
-from api import utils
+#from api import utils
 from abc import ABC, abstractmethod
-from twisted.internet import reactor
-from strategies.strategy import Strategy
-from models.order import Order
+#from twisted.internet import reactor
+from src.bot.strategies.strategy import Strategy
+from src.bot.models.order import Order
 
 
 class Exchange(ABC):
@@ -11,7 +11,7 @@ class Exchange(ABC):
     asset: str
     strategy: Strategy
 
-    def __init__(self, key: str, secret: str):
+    def __init__(self, key: str = None, secret: str = None):
         self.apiKey = key
         self.apiSecret = secret
         self.name = None

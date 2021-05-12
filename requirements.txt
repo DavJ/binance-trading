@@ -1,4 +1,5 @@
-numpy~=1.20.2
+numpy~=1.20.3
 pykalman~=0.9.5
 python-binance
-
+binance
+Twisted~=20.3.0

@@ -1,6 +1,5 @@
-from exchanges.exchange import Exchange
-from strategies.strategy import Strategy
-
+from src.bot.exchanges.exchange import Exchange
+from src.bot.strategies.strategy import Strategy
 
 class Watcher(Strategy):
     def __init__(self, exchange: Exchange, timeout=60, *args, **kwargs):

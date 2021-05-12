@@ -3,7 +3,7 @@ import threading
 import time
 from datetime import datetime
 from decouple import config
-from models.price import Price
+from src.bot.models.price import Price
 
 class Strategy(object):
     price: Price

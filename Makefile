@@ -10,4 +10,3 @@ ubuntu:
 	virtualenv --python=/usr/bin/python3.8 env	
 	. ./env/bin/activate
 	sudo pip3 install --upgrade -r requirements.txt
-	sudo pip3 install python-binance

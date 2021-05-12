@@ -3,18 +3,26 @@ from math import floor
 
 from binance.client import Client
 from binance.enums import *
-from binance.websockets import BinanceSocketManager
+#from binance.websockets import BinanceSocketManager
+#from binance.websockets import BinanceSocketManager                                 # Import the Binance Socket Manager
+#from unicorn_binance_websocket_api.unicorn_binance_websocket_api_manager import BinanceWebSocketApiManager
 
-from api import utils
-from exchanges import exchange
-from models.order import Order
-from models.price import Price
-
-from config.config_private import BINANCE_API_KEY, BINANCE_API_SECRET
+#from api import utils
+from src.bot.exchanges.exchange import Exchange
+from src.bot.models.order import Order
+from src.bot.models.price import Price
 
 
-class Binance(exchange.Exchange):
-    def __init__(self, key: str=BINANCE_API_KEY, secret: str=BINANCE_API_SECRET):
+from decouple import config
+#from config.configuration import BINANCE_API_KEY, BINANCE_API_SECRET
+
+
+class BinanceExchange(Exchange):
+
+    def __init__(self, **kwargs):
+        key = kwargs.get('key', config('BINANCE_API_KEY'))
+        secret = kwargs.get('secret', config('BINANCE_API_SECRET'))
+
         super().__init__(key, secret)
 
         self.client = Client(self.apiKey, self.apiSecret)
@@ -28,7 +36,8 @@ class Binance(exchange.Exchange):
 
     def symbol_ticker(self):
         response = self.client.get_symbol_ticker(symbol=self.get_symbol())
-        return Price(pair=self.get_symbol(), currency=self.currency.lower(), asset=self.asset.lower(), exchange=self.name.lower(),
+        return Price(pair=self.get_symbol(), currency=self.currency.lower(), asset=self.asset.lower(),
+                     exchange=self.name.lower(),
                      current=response['price'])
 
     def symbol_ticker_candle(self, interval=Client.KLINE_INTERVAL_1MINUTE):
@@ -37,13 +46,15 @@ class Binance(exchange.Exchange):
     def historical_symbol_ticker_candle(self, start: datetime, end=None, interval=Client.KLINE_INTERVAL_1MINUTE):
         # Convert default seconds interval to string like "1m"
         if isinstance(interval, int):
-            interval = str(floor(interval/60)) + 'm'
+            interval = str(floor(interval / 60)) + 'm'
 
         output = []
         for candle in self.client.get_historical_klines_generator(self.get_symbol(), interval, start, end):
             output.append(
-                Price(pair=self.compute_symbol_pair(), currency=self.currency.lower(), asset=self.asset.lower(), exchange=self.name.lower(),
-                      current=candle[1], lowest=candle[3], highest=candle[2], volume=candle[5], openAt=utils.format_date(datetime.fromtimestamp(int(candle[0])/1000)))
+                Price(pair=self.compute_symbol_pair(), currency=self.currency.lower(), asset=self.asset.lower(),
+                      exchange=self.name.lower(),
+                      current=candle[1], lowest=candle[3], highest=candle[2], volume=candle[5],
+                      openAt=utils.format_date(datetime.fromtimestamp(int(candle[0]) / 1000)))
             )
 
         return output

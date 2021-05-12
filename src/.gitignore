@@ -1,1 +1,4 @@
-config/config_private.py
+bot/config/config_private.py
+**/settings.ini
+**/*swp
+**/*pyc

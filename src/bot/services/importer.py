@@ -1,6 +1,6 @@
 import sys
 from datetime import datetime
-from models.dataset import Dataset
+from src.bot.models.dataset import Dataset
 
 
 class Importer:

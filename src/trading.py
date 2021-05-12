@@ -1,5 +1,5 @@
 from decimal import Decimal
-from config.config_private import BINANCE_API_KEY, BINANCE_API_SECRET
+from src.bot.config.config_private import BINANCE_API_KEY, BINANCE_API_SECRET
 from binance.client import Client
 #https://github.com/sammchardy/python-binance/blob/master/Endpoints.md
 #https://binance-docs.github.io/apidocs/spot/en/#test-new-order-trade
