@@ -1,11 +1,10 @@
 from decimal import Decimal
-from src.bot.config.config_private import BINANCE_API_KEY, BINANCE_API_SECRET
-from binance.client import Client
+from src.bot.tools.basic_tools import  get_binance_client
+
 #https://github.com/sammchardy/python-binance/blob/master/Endpoints.md
 #https://binance-docs.github.io/apidocs/spot/en/#test-new-order-trade
 
-client = Client(BINANCE_API_KEY, BINANCE_API_SECRET)
-
+client = get_binance_client()
 
 def max_converts(from_symbol, amount):
     rates = client.get_all_tickers()
