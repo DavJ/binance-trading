@@ -1,4 +1,6 @@
-src/config_private.*
+**/config_private.*
+**/*private*
 env/*
 **/*.pyc
-rpm
+**/*.swp
+**/*/rpm
