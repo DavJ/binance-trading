@@ -1,2 +1,4 @@
 src/config_private.*
+env/*
+**/*.pyc
 rpm
