@@ -3,3 +3,5 @@ pykalman~=0.9.5
 python-binance
 binance
 Twisted~=20.3.0
+kivi
+kivy_examples
