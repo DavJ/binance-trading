@@ -5,4 +5,3 @@ client = get_binance_client()
 
 trading_mode = CONFIGURATION.trading_mode
 pass
-
