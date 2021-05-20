@@ -1,5 +1,5 @@
 from decimal import Decimal
-from src.bot.tools.basic_tools import  get_binance_client
+from src.my_bot.basic_tools import  get_binance_client
 
 #https://github.com/sammchardy/python-binance/blob/master/Endpoints.md
 #https://binance-docs.github.io/apidocs/spot/en/#test-new-order-trade

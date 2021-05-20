@@ -1,8 +1,10 @@
-from decouple import Config, RepositoryEnv
+import decouple
 from binance.client import Client
 
+config = decouple.Config(decouple.RepositoryEnv('settings.ini'))
+
 def get_binance_client():
-    config = Config(RepositoryEnv('../bot/settings.ini'))
+
     return Client(config('BINANCE_API_KEY'), config('BINANCE_API_SECRET'))
 
 def get_java_name(text, title_first=True):
@@ -13,10 +15,10 @@ def get_java_name(text, title_first=True):
     else:
         return ''.join([init.lower(), *map(str.title, temp)])
 
+class Configuration:
 
-from decouple import Config, RepositoryEnv
-config = Config(RepositoryEnv('../bot/settings.ini'))
-client = Client(config('BINANCE_API_KEY'), config('BINANCE_API_SECRET'))
+    def __init__(self):
+        for attribute in ['MODE', 'TRADING_MODE', 'CURRENCY', 'ASSET']:
+            setattr(self, attribute.lower(), config(attribute))
 
-
-#print(get_java_name(text='test_string'))
+CONFIGURATION = Configuration()

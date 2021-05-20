@@ -3,7 +3,7 @@ import signal
 import sys
 import threading
 from decouple import config
-from src.bot.tools.basic_tools import get_java_name
+from src.my_bot.basic_tools import get_java_name
 
 from services.backtest import Backtest
 from services.importer import Importer
