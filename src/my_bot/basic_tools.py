@@ -28,12 +28,14 @@ def get_currency_pair(currency1, currency2):
     sorted_pair = sorted([currency1, currency2])  # assume pairs are created alphabetically
     return sorted_pair[0] + sorted_pair[1]
 
+def use_async_client():
+    return bool(CONFIGURATION.USE_ASYNC_CLIENT.lower() == 'true')
 
 class Configuration:
 
     def __init__(self):
         for attribute in ['MODE', 'TRADING_MODE', 'CURRENCY', 'ASSET', 'TRADING_CURRENCIES', 'MINIMAL_EARNINGS',
-                          'DB_FILE', 'VOLATILITY_LIMIT_FACTOR']:
+                          'DB_FILE', 'VOLATILITY_LIMIT_FACTOR', 'USE_ASYNC_CLIENT']:
             setattr(self, attribute, config(attribute))
 
 

@@ -5,7 +5,7 @@ import datetime
 import aiosqlite
 import json
 
-from src.my_bot.basic_tools import CONFIGURATION, get_async_binance_client
+from src.my_bot.basic_tools import CONFIGURATION, get_binance_client, get_async_binance_client, use_async_client
 
 
 class Asset:
@@ -14,12 +14,17 @@ class Asset:
         self.asset_amount_free = None
         self.asset_amount_locked = None
         self.max_amount = 0
-
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.aio_get_balance())
-        #loop.run_until_complete(self.__aio_link__())
-
         self._id = None
+
+        if use_async_client():
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(self.aio_get_balance())
+        else:
+            self.get_balance()
+
+            loop_db = asyncio.get_event_loop()
+            loop_db.run_until_complete(self.__aio_link__())
+
 
     async def __aio_link__(self):
         async with aiosqlite.connect(CONFIGURATION.DB_FILE) as conn:
@@ -41,7 +46,7 @@ class Asset:
         try:
             res = await client.get_asset_balance(self.currency)
             self.asset_amount_free = res['free']
-            self.asset_amount_free = res['locked']
+            self.asset_amount_locked = res['locked']
             self.max_amount = max(self.max_amount, res['free'] + res['locked'])
 
         except Exception:
@@ -50,9 +55,25 @@ class Asset:
         finally:
             await client.close_connection()
 
+    def get_balance(self):
+        """
+        gets asset from  (sync)
+        """
+        client = get_binance_client()
+        try:
+            res = client.get_asset_balance(self.currency)
+            self.asset_amount_free = res['free']
+            self.asset_amount_locked = res['locked']
+            self.max_amount = max(self.max_amount, res['free'] + res['locked'])
+
+        except Exception:
+            print(f'cannot get asset info')
+
+
+
     async def aio_insert_asset(self):
         insert_sql = '''
-        INSERT INTO assets (currency, asset_amount_free, asset_amount_locked, max_amount, last_update_time)
+        INSERT INTO asset (currency, asset_amount_free, asset_amount_locked, max_amount, last_update_time)
         VALUES (?, ?, ?, ?, strftime('%Y-%m-%d %H-%M','now')) ;
         '''
         async with aiosqlite.connect(CONFIGURATION.DB_FILE) as conn:
@@ -62,7 +83,7 @@ class Asset:
 
     async def aio_update_asset(self):
         update_sql = '''
-            UPDATE assets 
+            UPDATE asset 
             SET asset_amount=?, asset_amount_available=?, max_amount=?, last_update_time=strftime('%Y-%m-%d %H-%M','now')
             WHERE id=?;
             '''
