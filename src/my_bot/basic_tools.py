@@ -1,3 +1,4 @@
+from decimal import Decimal
 import os
 import sys
 import asyncio
@@ -23,13 +24,18 @@ def get_java_name(text, title_first=True):
     else:
         return ''.join([init.lower(), *map(str.title, temp)])
 
-
 def get_currency_pair(currency1, currency2):
     sorted_pair = sorted([currency1, currency2])  # assume pairs are created alphabetically
     return sorted_pair[0] + sorted_pair[1]
 
 def use_async_client():
     return bool(CONFIGURATION.USE_ASYNC_CLIENT.lower() == 'true')
+
+def fix_none(arg):
+    if arg is None:
+        return Decimal('0')
+    else:
+        return arg
 
 class Configuration:
 

@@ -10,6 +10,6 @@ client = get_binance_client()
 #pass
 
 asset = Asset('BNB')
-#asset = Asset('BTC')
+asset_ada = Asset('ADA')
 
 pass
