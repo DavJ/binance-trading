@@ -33,7 +33,7 @@ class Configuration:
 
     def __init__(self):
         for attribute in ['MODE', 'TRADING_MODE', 'CURRENCY', 'ASSET', 'TRADING_CURRENCIES', 'MINIMAL_EARNINGS',
-                          'DB_FILE', 'VOLATITY_LIMIT_FACTOR']:
+                          'DB_FILE', 'VOLATILITY_LIMIT_FACTOR']:
             setattr(self, attribute, config(attribute))
 
 
