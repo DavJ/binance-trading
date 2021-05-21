@@ -17,11 +17,26 @@ class Asset:
         self.max_amount = 0
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.get_balance())
+        loop.run_until_complete(self.aio_get_balance())
+        loop.run_until_complete(self.__aio_link__())
 
-    async def get_balance(self):
+        self._id = None
+
+    async def __aio_link__(self):
+        async with aiosqlite.connect(CONFIGURATION.DB_FILE) as conn:
+            cursor = await conn.execute(f"SELECT id FROM asset WHERE currency='{self.currency}'")
+            row = await cursor.fetchone()
+            #rows = await cursor.fetchall()
+            await cursor.close()
+            #await conn.close()     ... not
+        try:
+            self._id = row['id']
+        except Exception:
+            await self.aio_insert_asset()
+
+    async def aio_get_balance(self):
         """
-        gets asset from binance
+        gets asset from  (async)
         """
         client = await get_async_binance_client()
         try:
@@ -36,12 +51,23 @@ class Asset:
         finally:
             await client.close_connection()
 
-    async def aio_insert_asset(self, currency=None, asset_amount=None, asset_amount_available=None, max_amount=None):
+    async def aio_insert_asset(self):
         insert_sql = '''
-        INSERT INTO assets (currency, asset_amount_total, asset_amount_available, max_amount, last_update_time)
+        INSERT INTO assets (currency, asset_amount_free, asset_amount_locked, max_amount, last_update_time)
         VALUES (?, ?, ?, ?, strftime('%Y-%m-%d %H-%M','now')) ;
         '''
         async with aiosqlite.connect(CONFIGURATION.DB_FILE) as conn:
-            asset = (self.currency, self.asset_amount, self.asset_amount_available, self.max_amount)
+            asset = (self.currency, self.asset_amount_free, self.asset_amount_locked, self.max_amount)
             await conn.execute(insert_sql, asset)
+            await conn.commit()
+
+    async def aio_update_asset(self):
+        update_sql = '''
+            UPDATE assets 
+            SET asset_amount=?, asset_amount_available=?, max_amount=?, last_update_time=strftime('%Y-%m-%d %H-%M','now')
+            WHERE id=?;
+            '''
+        async with aiosqlite.connect(CONFIGURATION.DB_FILE) as conn:
+            asset = (self.asset_amount_free, self.asset_amount_locked, self.max_amount, self._id)
+            await conn.execute(update_sql, asset)
             await conn.commit()

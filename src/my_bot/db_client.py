@@ -11,8 +11,8 @@ def create_assets_table():
                 conn.execute('''CREATE TABLE assets
                               (id INTEGER AUTOINCREMENT,
                               currency TEXT NOT NULL,
-                              asset_amount REAL,
-                              asset_amount_available REAL,
+                              asset_amount_free REAL,
+                              asset_amount_locked REAL,
                               max_amount REAL,
                               last_update_time TEXT,        
                               PRIMARY KEY (currency)
@@ -63,27 +63,6 @@ def create_trades_table():
     except:
         print('cannot create table trades')
 
-
-async def aio_insert_asset(currency=None, asset_amount=None, asset_amount_available=None, max_amount=None):
-        insert_sql = '''
-        INSERT INTO assets (currency, asset_amount_total, asset_amount_available, max_amount, last_update_time)
-        VALUES (?, ?, ?, ?, strftime('%Y-%m-%d %H-%M','now')) ;
-        '''
-        async with aiosqlite.connect(CONFIGURATION.DB_FILE) as conn:
-            asset = (currency, asset_amount, asset_amount_available, max_amount)
-            await conn.execute(insert_sql, asset)
-            await conn.commit()
-
-async def aio_update_asset(id=None, asset_amount=None, asset_amount_available=None, max_amount=None):
-    update_sql = '''
-        UPDATE assets 
-        SET asset_amount=?, asset_amount_available=?, max_amount=?, last_update_time=strftime('%Y-%m-%d %H-%M','now')
-        WHERE id=?;
-        '''
-    async with aiosqlite.connect(CONFIGURATION.DB_FILE) as conn:
-        asset = (asset_amount, asset_amount_available, max_amount, id)
-        await conn.execute(update_sql, asset)
-        await conn.commit()
 
 
 def get_count_of_assets():
