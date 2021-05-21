@@ -3,10 +3,9 @@ import asyncio
 
 import datetime
 import aiosqlite
-import sqlite3
 import json
 
-from basic_tools import CONFIGURATION, get_async_binance_client
+from src.my_bot.basic_tools import CONFIGURATION, get_async_binance_client
 
 
 class Asset:
@@ -18,7 +17,7 @@ class Asset:
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self.aio_get_balance())
-        loop.run_until_complete(self.__aio_link__())
+        #loop.run_until_complete(self.__aio_link__())
 
         self._id = None
 
@@ -40,7 +39,7 @@ class Asset:
         """
         client = await get_async_binance_client()
         try:
-            res = client.get_asset_balance(self.currency)
+            res = await client.get_asset_balance(self.currency)
             self.asset_amount_free = res['free']
             self.asset_amount_free = res['locked']
             self.max_amount = max(self.max_amount, res['free'] + res['locked'])

@@ -5,45 +5,45 @@ import json
 
 from basic_tools import CONFIGURATION
 
-def create_assets_table():
+def create_asset_table():
        try:
            with sqlite3.connect(CONFIGURATION.DB_FILE) as conn:
-                conn.execute('''CREATE TABLE assets
-                              (id INTEGER AUTOINCREMENT,
+                conn.execute('''CREATE TABLE asset
+                              (id INTEGER PRIMARY KEY AUTOINCREMENT,
                               currency TEXT NOT NULL,
                               asset_amount_free REAL,
                               asset_amount_locked REAL,
                               max_amount REAL,
-                              last_update_time TEXT,        
-                              PRIMARY KEY (currency)
+                              last_update_time TEXT        
+                              /*PRIMARY KEY (currency)*/
                               );''')
        except:
-           print('cannot create  table assets')
+           print('cannot create table asset')
 
 
 def create_volatility_table():
     try:
         with sqlite3.connect(CONFIGURATION.DB_FILE) as conn:
             conn.execute('''CREATE TABLE volatility
-                              (id INTEGER AUTOINCREMENT,
+                              (id INTEGER PRIMARY KEY AUTOINCREMENT,
                                currency TEXT NOT NULL,
-                               base_currency TEXT NOT NULL
+                               base_currency TEXT NOT NULL,
                                time TEXT NOT NULL,
                                ratio REAL,                                    /*actual currency to base currency ratio*/
                                predicted_ratio REAL,                          /*predicted ratio in one time step*/
                                volatility REAL,                                  
-                               last_update_time TEXT,        
-                               PRIMARY KEY (currency, base_currency, time)
+                               last_update_time TEXT        
+                               /*PRIMARY KEY (currency, base_currency, time)*/
                               );''')
     except:
         print('cannot create table volatility')
 
 
-def create_trades_table():
+def create_trade_table():
     try:
         with sqlite3.connect(CONFIGURATION.DB_FILE) as conn:
-            conn.execute('''CREATE TABLE trades
-                              (id INTEGER AUTOINCREMENT,
+            conn.execute('''CREATE TABLE trade
+                              (id INTEGER PRIMARY KEY AUTOINCREMENT,
                                pair TEXT NOT NULL,
                                create_time TEXT NOT NULL,
                                side TEXT NOT NULL,
@@ -54,14 +54,14 @@ def create_trades_table():
                                price REAL,
                                executed REAL,
                                total REAL,
-                               total_currency TEXT NOT NULL
+                               total_currency TEXT NOT NULL,
                                ratio REAL,                                    
                                predicted_ratio REAL,                          
-                               status TEXT NOT NULL,        
-                               PRIMARY KEY (pair, create_time, side)
+                               status TEXT NOT NULL        
+                               /*PRIMARY KEY (pair, create_time, side)*/
                               );''')
     except:
-        print('cannot create table trades')
+        print('cannot create table trade')
 
 
 
@@ -85,8 +85,8 @@ def get_asset(currency):
 
 if __name__ == '__main__':
     try:
-        create_assets_table()
+        create_asset_table()
         create_volatility_table()
-        create_trades_table()
+        create_trade_table()
     except Exception:
         print('cannot create table')
