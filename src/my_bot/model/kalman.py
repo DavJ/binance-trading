@@ -34,7 +34,7 @@ class Kalman:
 
     def update(self, time, value):
 
-        dt = time - self.previous_time
+        dt = (time - self.previous_time).total_seconds()
         #observations = np.array([[value, (value-self.previous_value)/dt]])
         observations = np.array([[value, 0]])
 
@@ -50,8 +50,10 @@ class Kalman:
         self.previous_time = time
         self.previous_value = value
 
+    @property
     def value(self):
         return self.state[0]
 
+    @property
     def variance(self):
         return self.covariance[0]
