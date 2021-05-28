@@ -4,6 +4,7 @@ import sys
 import asyncio
 import decouple
 from binance.client import Client, AsyncClient
+from binance import ThreadedWebsocketManager
 
 INI_FILE = os.path.dirname(os.path.realpath(__file__)) + '/settings.ini'
 
@@ -15,6 +16,10 @@ def get_binance_client():
 async def get_async_binance_client():
     async_client = await AsyncClient.create(config('BINANCE_API_KEY'), config('BINANCE_API_SECRET'))
     return async_client
+
+def get_threaded_web_socket_manager():
+    twm = ThreadedWebsocketManager(config('BINANCE_API_KEY'), config('BINANCE_API_SECRET'))
+
 
 def get_java_name(text, title_first=True):
     # saving first and rest using split()
