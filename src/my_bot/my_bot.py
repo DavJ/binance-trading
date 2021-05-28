@@ -1,7 +1,7 @@
 from decimal import Decimal
 from basic_tools import get_binance_client, CONFIGURATION
 from model.asset import Asset
-
+from model.ticker import Ticker
 
 client = get_binance_client()
 
@@ -12,4 +12,8 @@ client = get_binance_client()
 asset = Asset('BNB')
 asset_ada = Asset('ADA')
 
-pass
+ticker = Ticker('ADA')
+
+
+while True:
+    pass
