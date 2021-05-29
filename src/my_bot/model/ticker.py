@@ -9,6 +9,7 @@ import json
 from src.my_bot.basic_tools import (CONFIGURATION, get_binance_client, get_async_binance_client,
                                     use_async_client, get_async_web_socket_manager, get_threaded_web_socket_manager)
 from src.my_bot.model.kalman import Kalman
+from src.my_bot.model.chart import Chart
 
 class Ticker:
 
@@ -21,6 +22,7 @@ class Ticker:
         self._twm = None
         self._async_client = None
         self._filter = None
+        self._chart = None
         if use_async_client():
             loop = asyncio.get_event_loop()
             loop.run_until_complete(self.aio_ticker_run())
@@ -46,6 +48,7 @@ class Ticker:
         self._twm = get_threaded_web_socket_manager()
 
         self._twm.start_kline_socket(callback=self.handle_kline_socket_message, symbol=self.pair)
+        #self._twm.start order_book_socket(callback=self.handle_kline_socket_message, symbol=self.pair)
 
     def ticker_stop(self):
         self._twm.stop
@@ -60,10 +63,23 @@ class Ticker:
             self.time = message_time
             self.last_price = float(msg['k']['c'])
             self.update_filter()
-            print(f'{self.time.isoformat()}: {self.last_price}')
+
+            print(f'{self.time.isoformat()} : {self.last_price} : {self._filter.value} : {self._filter.variance}')
+
+    def handle_depth_socket_message(self, msg):
+        print(f"message type: {msg['e']}")
+        print(msg)
 
     def update_filter(self):
         if self._filter is None:
             self._filter = Kalman(time=self.time, value=self.last_price)
         else:
             self._filter.update(time=self.time, value=self.last_price)
+
+    def update_chart(self):
+        if self.time is None or self.last_price is None:
+            return
+        if self._chart is None:
+            self._chart = Chart(time=self.time, value=self.last_price)
+        else:
+            self._chart.update(time=self.time, value=self.last_price)

@@ -27,7 +27,6 @@ async def get_async_web_socket_manager():
     bm = BinanceSocketManager(awm)
     return bm
 
-
 def get_java_name(text, title_first=True):
     # saving first and rest using split()
     init, *temp = text.split('_')
@@ -39,6 +38,9 @@ def get_java_name(text, title_first=True):
 def get_currency_pair(currency1, currency2):
     sorted_pair = sorted([currency1, currency2])  # assume pairs are created alphabetically
     return sorted_pair[0] + sorted_pair[1]
+
+def get_trading_currencies():
+    return(config('TRADING_CURRENCIES').split(','))
 
 def use_async_client():
     return bool(CONFIGURATION.USE_ASYNC_CLIENT.lower() == 'true')

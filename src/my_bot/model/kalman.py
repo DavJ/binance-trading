@@ -17,10 +17,10 @@ class Kalman:
         if n_dim != 2:
             raise NotImplementedError('kalman only supports 2 dimensions now')
         self.n_dim = n_dim
-        self.state = [0, 0]
+        self.state = [value, 0]
         self.covariance = np.eye(2)
-        self.observation_covariance = np.array([[1]])
-        self.transition_covariance = np.array([[0.001, 0.001], [0.001, 0.001]])
+        self.observation_covariance = np.array([[0.0001]])
+        self.transition_covariance = np.array([[0.0001, 0.0001], [0.0001, 0.0001]])
         self.kf = KalmanFilter(
             transition_covariance=self.transition_covariance,  # H
             observation_covariance=self.observation_covariance,  # Q
@@ -57,3 +57,5 @@ class Kalman:
     @property
     def variance(self):
         return self.covariance[0]
+
+
