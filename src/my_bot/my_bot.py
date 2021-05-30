@@ -51,7 +51,7 @@ class Application:
         for order_book in self.order_books.values():
             asset = self.user_ticker.assets[order_book.currency]
             max_sell_amount = round_down(asset.asset_amount_free, 1)
-            if (max_sell_amount >=0
+            if (max_sell_amount > 0
                 and order_book.avg_sell_price >= asset.recent_average_buy_price * (1 + self.minimal_earnings + self.sell_fee)):
                    self.active_orders.append(Order(side='SELL', currency=asset.currency, amount=max_sell_amount, price=order_book.avg_sell_price))
 
