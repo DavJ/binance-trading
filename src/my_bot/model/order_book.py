@@ -5,6 +5,7 @@ import asyncio
 import datetime
 import aiosqlite
 import json
+import inspect
 
 from src.my_bot.basic_tools import (CONFIGURATION, get_binance_client, get_async_binance_client,
                                     use_async_client, get_async_web_socket_manager, get_threaded_web_socket_manager)
@@ -13,7 +14,7 @@ from src.my_bot.model.chart import Chart
 
 
 class OrderBook:
-
+    #ticker https://python-binance.readthedocs.io/en/latest/websockets.html
     def __init__(self, currency=None, asset_currency='BNB'):
         self.currency = currency
         self.asset_currency = asset_currency
@@ -55,3 +56,16 @@ class OrderBook:
         self.avg_price_relative_difference = 2* self.avg_price_difference / (self.avg_sell_price + self.avg_buy_price)
         self.max_price_difference = self.max_sell_price - self.max_buy_price
         self.max_price_relative_difference = 2 * self.max_price_difference / (self.max_sell_price + self.max_buy_price)
+
+    def print(self):
+        print(f'ORDER BOOK for {self.pair}')
+        for i in inspect.getmembers(self):
+
+            # to remove private and protected
+            # functions
+            if not i[0].startswith('_'):
+
+                # To remove other methods that
+                # does not start with a underscore
+                if not inspect.ismethod(i[1]):
+                    print(f'{i[0]} : {i[1]}')
