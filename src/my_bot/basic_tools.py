@@ -114,7 +114,7 @@ class Configuration:
         for attribute in ['MODE', 'TRADING_MODE', 'MAIN_CURRENCY', 'TRADING_CURRENCIES', 'MINIMAL_EARNINGS',
                           'MINIMAL_MAIN_CURRENCY_BALANCE', 'MAIN_CURRENCY_FRACTION',
                           'BUY_FEE', 'SELL_FEE',
-                          'DB_FILE', 'VOLATILITY_LIMIT_FACTOR', 'USE_ASYNC_CLIENT']:
+                          'DB_FILE', 'VOLATILITY_LIMIT_FACTOR', 'USE_ASYNC_CLIENT', 'SLEEP']:
             setattr(self, attribute, config(attribute))
 
 

@@ -31,7 +31,7 @@ class Application:
             for _, order_book in self.order_books.items():
                 order_book.update()
             self.trade()
-            sleep(20)
+            sleep(CONFIGURATION.SLEEP)
 
     def trade(self):
         sorted_order_books = sorted(self.order_books.values(), key=lambda x: x.avg_price_difference, reverse=True)
@@ -43,14 +43,14 @@ class Application:
             asset = self.user_ticker.assets[order_book.currency]
             if (buy_amount_main_currency >=0
                 and order_book.avg_buy_price <= asset.recent_average_sell_price * (1 - self.minimal_earnings - self.sell_fee)):
-                buy_amount = round_down(buy_amount_main_currency * order_book.avg_buy_price, 1)
+                buy_amount = round_down(buy_amount_main_currency / order_book.avg_buy_price, 5)
                 self.active_orders.append(
                     Order(side='BUY', currency=asset.currency, amount=buy_amount, price=order_book.avg_buy_price))
 
         #SELL algorithm
         for order_book in self.order_books.values():
             asset = self.user_ticker.assets[order_book.currency]
-            max_sell_amount = round_down(asset.asset_amount_free, 1)
+            max_sell_amount = round_down(asset.asset_amount_free, 5)
             if (max_sell_amount > 0
                 and order_book.avg_sell_price >= asset.recent_average_buy_price * (1 + self.minimal_earnings + self.sell_fee)):
                    self.active_orders.append(Order(side='SELL', currency=asset.currency, amount=max_sell_amount, price=order_book.avg_sell_price))
