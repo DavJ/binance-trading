@@ -8,7 +8,8 @@ import json
 import numpy as np
 
 from src.my_bot.basic_tools import (CONFIGURATION, get_binance_client, get_async_binance_client,
-                                    use_async_client, get_async_web_socket_manager, get_threaded_web_socket_manager)
+                                    use_async_client, get_async_web_socket_manager, get_threaded_web_socket_manager,
+                                    round_down)
 
 class Order:
 
@@ -39,9 +40,9 @@ class Order:
         client = get_binance_client()
         if self.type == 'LIMIT':
             if self.side == 'BUY':
-                order = client.order_limit_buy(symbol=self.pair, quantity=round(self.amount, 1), price=round(self.price, 5))
+                order = client.order_limit_buy(symbol=self.pair, quantity=round_down(self.amount, 1), price=round(self.price, 5))
             elif self.side == 'SELL':
-                order = client.order_limit_sell(symbol=self.pair, quantity=round(self.amount, 1), price=round(self.price, 5))
+                order = client.order_limit_sell(symbol=self.pair, quantity=round_down(self.amount, 1), price=round(self.price, 5))
             else:
                 print(f'unknown order side {self.side}')
         else:
