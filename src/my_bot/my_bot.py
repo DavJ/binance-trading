@@ -31,7 +31,7 @@ class Application:
             for _, order_book in self.order_books.items():
                 order_book.update()
             self.trade()
-            sleep(CONFIGURATION.SLEEP)
+            sleep(int(CONFIGURATION.SLEEP))
 
     def trade(self):
         sorted_order_books = sorted(self.order_books.values(), key=lambda x: x.avg_price_difference, reverse=True)
