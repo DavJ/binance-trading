@@ -8,7 +8,8 @@ import json
 import inspect
 
 from src.my_bot.basic_tools import (CONFIGURATION, get_binance_client, get_async_binance_client,
-                                    use_async_client, get_async_web_socket_manager, get_threaded_web_socket_manager)
+                                    use_async_client, get_async_web_socket_manager, get_threaded_web_socket_manager,
+                                    get_order_book_statistics)
 from src.my_bot.model.kalman import Kalman
 from src.my_bot.model.chart import Chart
 
@@ -40,23 +41,9 @@ class OrderBook:
         return f"OrderBook(currency='{self.currency}, asset_currency={self.asset_currency})"
 
     def update(self):
-        client = get_binance_client()
-        print(self.pair)
-        ticker = client.get_order_book(symbol=self.pair)
-        self._bids = ticker['bids']
-        self._asks = ticker['asks']
-        self.min_buy_price = min([float(bid[0]) for bid in self._bids])
-        self.max_buy_price = max([float(bid[0]) for bid in self._bids])
-        self.total_bid = sum([float(bid[1]) for bid in self._bids])
-        self.avg_buy_price = sum([float(bid[0]) * float(bid[1]) for bid in self._bids]) / self.total_bid
-        self.min_sell_price = min([float(ask[0]) for ask in self._asks])
-        self.max_sell_price = max([float(ask[0]) for ask in self._asks])
-        self.total_ask = sum([float(ask[1]) for ask in self._asks])
-        self.avg_sell_price = sum([float(ask[0]) * float(ask[1]) for ask in self._asks]) / self.total_ask
-        self.avg_price_difference = self.avg_sell_price - self.avg_buy_price
-        self.avg_price_relative_difference = 2* self.avg_price_difference / (self.avg_sell_price + self.avg_buy_price)
-        self.max_price_difference = self.max_sell_price - self.max_buy_price
-        self.max_price_relative_difference = 2 * self.max_price_difference / (self.max_sell_price + self.max_buy_price)
+        statistics = get_order_book_statistics(self.pair)
+        for item in statistics:
+            setattr(self, item, statistics[item])
 
     def print(self):
         print(f'ORDER BOOK for {self.pair}')

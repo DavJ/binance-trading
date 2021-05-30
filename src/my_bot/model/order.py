@@ -18,7 +18,7 @@ class Order:
         self.amount = amount
         self.price = price
         self.type = type
-        pass
+        print(str(self))
 
     def __repr__(self):
         return f"Order(side={self.side}, currency={self.currency}, amount={self.amount}, price={self.price}. type={self.type})"

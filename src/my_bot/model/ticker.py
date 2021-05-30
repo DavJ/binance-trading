@@ -64,7 +64,7 @@ class Ticker:
             self.last_price = float(msg['k']['c'])
             self.update_filter()
 
-            print(f'{self.time.isoformat()} : {self.last_price} : {self._filter.value} : {self._filter.variance}')
+            #print(f'{self.time.isoformat()} : {self.last_price} : {self._filter.value} : {self._filter.variance}')
 
     def handle_depth_socket_message(self, msg):
         print(f"message type: {msg['e']}")

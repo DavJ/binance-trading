@@ -6,8 +6,8 @@ import datetime
 import aiosqlite
 import json
 
-from src.my_bot.basic_tools import CONFIGURATION, get_binance_client, get_async_binance_client, use_async_client
-
+from src.my_bot.basic_tools import (CONFIGURATION, get_binance_client, get_async_binance_client,
+                                    ilen, get_order_book_statistics)
 
 class Asset:
     def __init__(self, currency=None, asset_amount_free=None, asset_amount_locked=None, main_currency='BNB'):
@@ -30,7 +30,7 @@ class Asset:
             else:
                 self.get_balance()
 
-            self.update_last_trades()
+        self.update_last_trades()
 
         loop_db = asyncio.get_event_loop()
         loop_db.run_until_complete(self.__aio_link__())
@@ -90,20 +90,36 @@ class Asset:
                 remaining_amount = max(0, asset_amount - sum)
                 if remaining_amount == 0:
                     break
+                sum += remaining_amount
                 weighted_sum += remaining_amount * float(trade['price'])
             return weighted_sum / sum
 
         if self.currency != self.main_currency:
             client = get_binance_client()
             asset_trades = client.get_my_trades(symbol=self.currency + self.main_currency, limit=30)
-            buy_trades = filter(lambda x: x['isBuyer'], asset_trades)
-            sell_trades = filter(lambda x: not x['isBuyer'], asset_trades)
-            last_buy_trade = sorted(buy_trades, key=lambda x: x['time'])[-1]
-            last_sell_trade = sorted(sell_trades, key=lambda x: x['time'])[-1]
-            self.last_buy_price = float(last_buy_trade['price'])
-            self.last_sell_price = float(last_sell_trade['price'])
-            self.recent_average_buy_price = calc_average_price_for_asset_amount(self.asset_amount_free, buy_trades)
-            self.recent_average_sell_price = calc_average_price_for_asset_amount(self.asset_amount_free, sell_trades)
+            buy_trades = list(filter(lambda x: x['isBuyer'], asset_trades))
+            sell_trades = list(filter(lambda x: not x['isBuyer'], asset_trades))
+
+            if len(buy_trades) == 0 or len(sell_trades) == 0:
+                statistics = get_order_book_statistics(self.currency + self.main_currency)
+
+            if len(buy_trades) > 0:
+                last_buy_trade = sorted(buy_trades, key=lambda x: x['time'])[-1]
+                self.last_buy_price = float(last_buy_trade['price'])
+                self.recent_average_buy_price = calc_average_price_for_asset_amount(self.asset_amount_free, buy_trades)
+            else:
+                #set some initial values
+                self.last_buy_price = statistics['avg_buy_price']
+                self.recent_average_buy_price = self.last_buy_price
+
+            if len(sell_trades) > 0:
+                last_sell_trade = sorted(sell_trades, key=lambda x: x['time'])[-1]
+                self.last_sell_price = float(last_sell_trade['price'])
+                self.recent_average_sell_price = calc_average_price_for_asset_amount(self.asset_amount_free, sell_trades)
+            else:
+                #set some initial values
+                self.last_sell_price = statistics['avg_sell_price']
+                self.recent_average_sell_price = self.last_sell_price
 
     async def aio_db_insert_asset(self):
         insert_sql = '''

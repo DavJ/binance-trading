@@ -7,7 +7,8 @@ import aiosqlite
 import json
 
 from src.my_bot.basic_tools import (CONFIGURATION, get_binance_client, get_async_binance_client,
-                                    use_async_client, get_async_web_socket_manager, get_threaded_web_socket_manager)
+                                    get_evaluation_currencies, use_async_client,
+                                    get_async_web_socket_manager, get_threaded_web_socket_manager)
 from src.my_bot.model.kalman import Kalman
 from src.my_bot.model.chart import Chart
 from src.my_bot.model.asset import Asset
@@ -18,12 +19,13 @@ class UserTicker:
         self._async_client = None
         self._client = None
         self._twm = None
-        self._assets = {}
+        self.assets = {}
 
-        self._client =get_binance_client()
+        self._client = get_binance_client()
         self._account = self._client.get_account()
         for item in self._account['balances']:
-            self._assets.update(**{item['asset']: Asset(currency=item['asset'], asset_amount_free=item['free'], asset_amount_locked=item['locked'])})
+            if item['asset'] in get_evaluation_currencies():
+                self.assets.update(**{item['asset']: Asset(currency=item['asset'], asset_amount_free=item['free'], asset_amount_locked=item['locked'])})
 
         if use_async_client():
             loop = asyncio.get_event_loop()
@@ -45,7 +47,7 @@ class UserTicker:
                 if res['e'] == 'outboundAccountPosition':
                     for balance in res['B']:
                         message_time = datetime.datetime.fromtimestamp(int(msg['E']) / 1000)
-                        self._assets[balance['a'].update(time=message_time, balance=balance)]
+                        self.assets[balance['a'].update(time=message_time, balance=balance)]
 
         await client.close_connection()
 
@@ -66,7 +68,7 @@ class UserTicker:
             if msg['e'] == 'outboundAccountPosition':
                 for balance in msg['B']:
                     message_time = datetime.datetime.fromtimestamp(int(msg['E']) / 1000)
-                    self._assets[balance['a']].update(time=message_time, balance=balance)
+                    self.assets[balance['a']].update(time=message_time, balance=balance)
 
             pass
 
