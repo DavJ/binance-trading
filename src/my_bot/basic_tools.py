@@ -40,7 +40,7 @@ def get_currency_pair(currency1, currency2):
     return sorted_pair[0] + sorted_pair[1]
 
 def get_trading_currencies():
-    return(config('TRADING_CURRENCIES').split(','))
+    return(config('TRADING_CURRENCIES').replace(' ', '').split(','))
 
 def use_async_client():
     return bool(CONFIGURATION.USE_ASYNC_CLIENT.lower() == 'true')
@@ -54,7 +54,9 @@ def fix_none(arg):
 class Configuration:
 
     def __init__(self):
-        for attribute in ['MODE', 'TRADING_MODE', 'CURRENCY', 'ASSET', 'TRADING_CURRENCIES', 'MINIMAL_EARNINGS',
+        for attribute in ['MODE', 'TRADING_MODE', 'MAIN_CURRENCY', 'TRADING_CURRENCIES', 'MINIMAL_EARNINGS',
+                          'MINIMAL_MAIN_CURRENCY_BALANCE', 'MAIN_CURRENCY_FRACTION',
+                          'BUY_FEE', 'SELL_FEE',
                           'DB_FILE', 'VOLATILITY_LIMIT_FACTOR', 'USE_ASYNC_CLIENT']:
             setattr(self, attribute, config(attribute))
 

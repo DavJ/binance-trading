@@ -13,10 +13,12 @@ class Asset:
     def __init__(self, currency=None, asset_amount_free=None, asset_amount_locked=None, main_currency='BNB'):
         self.currency = currency
         self.main_currency = main_currency
-        self.asset_amount_free = asset_amount_free
-        self.asset_amount_locked = asset_amount_locked
+        self.asset_amount_free = None if asset_amount_free is None else float(asset_amount_free)
+        self.asset_amount_locked = None if asset_amount_locked is None else float(asset_amount_locked)
         self.last_buy_price = None
         self.last_sell_price = None
+        self.recent_average_buy_price = None
+        self.recent_average_sell_price = None
         self._time = None
         self._id = None
 
@@ -79,13 +81,29 @@ class Asset:
             print(f'cannot get asset info')
 
     def update_last_trades(self):
+
+        def calc_average_price_for_asset_amount(asset_amount, trades):
+            sorted_trades = sorted(trades, key=lambda x: x['time'], reverse=True)
+            sum = 0
+            weighted_sum = 0
+            for trade in sorted_trades:
+                remaining_amount = max(0, asset_amount - sum)
+                if remaining_amount == 0:
+                    break
+                weighted_sum += remaining_amount * float(trade['price'])
+            return weighted_sum / sum
+
         if self.currency != self.main_currency:
             client = get_binance_client()
             asset_trades = client.get_my_trades(symbol=self.currency + self.main_currency, limit=30)
-            last_buy_trade = sorted(filter(lambda x: x['isBuyer'], asset_trades), key=lambda x: x['time'])[-1]
-            last_sell_trade = sorted(filter(lambda x: not x['isBuyer'], asset_trades), key=lambda x: x['time'])[-1]
+            buy_trades = filter(lambda x: x['isBuyer'], asset_trades)
+            sell_trades = filter(lambda x: not x['isBuyer'], asset_trades)
+            last_buy_trade = sorted(buy_trades, key=lambda x: x['time'])[-1]
+            last_sell_trade = sorted(sell_trades, key=lambda x: x['time'])[-1]
             self.last_buy_price = float(last_buy_trade['price'])
             self.last_sell_price = float(last_sell_trade['price'])
+            self.recent_average_buy_price = calc_average_price_for_asset_amount(self.asset_amount_free, buy_trades)
+            self.recent_average_sell_price = calc_average_price_for_asset_amount(self.asset_amount_free, sell_trades)
 
     async def aio_db_insert_asset(self):
         insert_sql = '''
@@ -115,8 +133,8 @@ class Asset:
     def update(self, time=None, balance=None):
         self._time = time
         if balance['a'] == self.currency:
-            self.asset_amount_free = balance['f']
-            self.asset_amount_locked = balance['l']
+            self.asset_amount_free = float(balance['f'])
+            self.asset_amount_locked = float(balance['l'])
             self.update_last_trades()
         else:
             raise(f'incorrect asset currency')

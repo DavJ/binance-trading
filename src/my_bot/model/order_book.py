@@ -15,10 +15,10 @@ from src.my_bot.model.chart import Chart
 
 class OrderBook:
     #ticker https://python-binance.readthedocs.io/en/latest/websockets.html
-    def __init__(self, currency=None, asset_currency='BNB'):
+    def __init__(self, currency=None, main_currency='BNB'):
         self.currency = currency
-        self.asset_currency = asset_currency
-        self.pair = currency + asset_currency
+        self.asset_currency = main_currency
+        self.pair = currency + main_currency
         self.time = None
         self._bids = None
         self._asks = None
@@ -41,6 +41,7 @@ class OrderBook:
 
     def update(self):
         client = get_binance_client()
+        print(self.pair)
         ticker = client.get_order_book(symbol=self.pair)
         self._bids = ticker['bids']
         self._asks = ticker['asks']
