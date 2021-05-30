@@ -1,5 +1,5 @@
 from decimal import Decimal
-from basic_tools import get_binance_client, CONFIGURATION, get_trading_currencies
+from basic_tools import get_binance_client, CONFIGURATION, get_trading_currencies, round_down
 from model.asset import Asset
 from model.ticker import Ticker
 from model.order_book import OrderBook
@@ -39,18 +39,18 @@ class Application:
         for order_book in sorted_order_books:
             if self.user_ticker.assets[self.main_currency].asset_amount_free <= self.minimal_main_currency_balance:
                 break
-            buy_amount_main_currency = math.floor((self.user_ticker.assets[self.main_currency].asset_amount_free - self.minimal_main_currency_balance) * self.main_currency_fraction, 1)
+            buy_amount_main_currency = round_down((self.user_ticker.assets[self.main_currency].asset_amount_free - self.minimal_main_currency_balance) * self.main_currency_fraction, 1)
             asset = self.user_ticker.assets[order_book.currency]
             if (buy_amount_main_currency >=0
                 and order_book.avg_buy_price <= asset.recent_average_sell_price - self.minimal_earnings - self.sell_fee):
-                buy_amount = math.floor(buy_amount_main_currency * order_book.avg_buy_price, 1)
+                buy_amount = round_down(buy_amount_main_currency * order_book.avg_buy_price, 1)
                 self.active_orders.append(
                     Order(side='BUY', currency=asset.currency, amount=buy_amount, price=order_book.avg_buy_price))
 
         #SELL algorithm
         for order_book in self.order_books.values():
             asset = self.user_ticker.assets[order_book.currency]
-            max_sell_amount = math.floor(asset.asset_amount_free, 1)
+            max_sell_amount = round_down(asset.asset_amount_free, 1)
             if (max_sell_amount >=0
                 and order_book.avg_sell_price >= asset.recent_average_buy_price + self.minimal_earnings + self.sell_fee):
                    self.active_orders.append(Order(side='SELL', currency=asset.currency, amount=max_sell_amount, price=order_book.avg_sell_price))
