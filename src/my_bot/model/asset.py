@@ -100,24 +100,23 @@ class Asset:
             buy_trades = list(filter(lambda x: x['isBuyer'], asset_trades))
             sell_trades = list(filter(lambda x: not x['isBuyer'], asset_trades))
 
-            if len(buy_trades) == 0 or len(sell_trades) == 0:
-                statistics = get_order_book_statistics(self.currency + self.main_currency)
-
-            if len(buy_trades) > 0:
+            try:
                 last_buy_trade = sorted(buy_trades, key=lambda x: x['time'])[-1]
                 self.last_buy_price = float(last_buy_trade['price'])
                 self.recent_average_buy_price = calc_average_price_for_asset_amount(self.asset_amount_free, buy_trades)
-            else:
+            except Exception:
                 #set some initial values
+                statistics = get_order_book_statistics(self.currency + self.main_currency)
                 self.last_buy_price = statistics['avg_buy_price']
                 self.recent_average_buy_price = self.last_buy_price
 
-            if len(sell_trades) > 0:
+            try:
                 last_sell_trade = sorted(sell_trades, key=lambda x: x['time'])[-1]
                 self.last_sell_price = float(last_sell_trade['price'])
                 self.recent_average_sell_price = calc_average_price_for_asset_amount(self.asset_amount_free, sell_trades)
-            else:
+            except Exception:
                 #set some initial values
+                statistics = get_order_book_statistics(self.currency + self.main_currency)
                 self.last_sell_price = statistics['avg_sell_price']
                 self.recent_average_sell_price = self.last_sell_price
 
