@@ -66,10 +66,16 @@ def fix_none(arg):
     else:
         return arg
 
-
 def round_down(x, decimal_places):
     return math.floor(x * 10 ** decimal_places) / 10 ** decimal_places
 
+def round_up(x, decimal_places):
+    return math.ceil(x * 10 ** decimal_places) / 10 ** decimal_places
+
+def format_to_precision(x, precision):
+    return Decimal(str(x)).quantize(Decimal(str(10**-precision)))
+
+    #return f'{x:.{precision}}'
 
 def ilen(iterable):
     return reduce(lambda sum, element: sum + 1, iterable, 0)

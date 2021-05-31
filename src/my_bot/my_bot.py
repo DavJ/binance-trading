@@ -41,7 +41,7 @@ class Application:
                 break
             buy_amount_main_currency = round_down((self.user_ticker.assets[self.main_currency].asset_amount_free - self.minimal_main_currency_balance) * self.main_currency_fraction, 1)
             asset = self.user_ticker.assets[order_book.currency]
-            if (buy_amount_main_currency >=0
+            if (buy_amount_main_currency >= 0
                 and order_book.avg_buy_price <= asset.recent_average_sell_price * (1 - self.minimal_earnings - self.sell_fee)):
                 buy_amount = round_down(buy_amount_main_currency / order_book.avg_buy_price, 5)
                 self.active_orders.append(
