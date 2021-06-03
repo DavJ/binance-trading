@@ -10,19 +10,40 @@ import math
 
 from src.my_bot.basic_tools import (CONFIGURATION, get_binance_client, get_async_binance_client,
                                     use_async_client, get_async_web_socket_manager, get_threaded_web_socket_manager,
-                                    round_down, round_up, format_to_precision)
+                                    round_down, round_up, format_to_precision,
+                                    get_average_buy_price_for_sell_quantity, get_average_sell_price_for_buy_quantity)
+from src.my_bot.model.profit import Profit
+
 
 class Order:
 
     def __init__(self, side=None, currency=None, amount=None, price=None, type='LIMIT', main_currency='BNB'):
+        """
+
+        :param side:
+        :param currency:
+        :param amount:
+        :param price:                   ...                       if not provided profitable price is used (recommended)
+        :param type:
+        :param main_currency:
+        :param profit:
+        """
+
         self.side = side
         self.currency = currency
         self.amount = amount
-        self.price = round(price, 5)
+
         self.type = type
         self._order = None
         self._info = None
         self.main_currency = main_currency
+        self.profit = Profit()
+        if price:
+            self.price = price
+        else:
+            self.price = self.profitable_price
+
+
         print(str(self))
 
         try:
@@ -77,12 +98,34 @@ class Order:
 
             if Decimal(self.quantity) > 0:
                 if self.side == 'BUY':
-                    self._order = client.order_limit_buy(symbol=self.pair, quantity=self.quantity, price=self.buy_price)
+                    if self.average_sell_price_for_buy_trade > self.price:
+                        self._order = client.order_limit_buy(symbol=self.pair, quantity=self.quantity, price=self.buy_price)
                 elif self.side == 'SELL':
-                    self._order = client.order_limit_sell(symbol=self.pair, quantity=self.quantity, price=self.sell_price)
+                    if self.average_buy_price_for_sell_trade < self.price:
+                        self._order = client.order_limit_sell(symbol=self.pair, quantity=self.quantity, price=self.sell_price)
                 else:
                    print(f'not entering trade - unknown order side {self.side}')
             else:
                 print(f'not entering trade - trade filters would result to zero quantity')
         else:
             print(f'unknown order type {self.type}')
+
+    @property
+    def average_buy_price_for_sell_trade(self):
+        return get_average_buy_price_for_sell_quantity(trade_quantity=self.quantity,
+                                                       currency=self.currency,
+                                                       main_currency=self.main_currency)
+
+    @property
+    def average_sell_price_for_buy_trade(self):
+        return get_average_sell_price_for_buy_quantity(trade_quantity=self.quantity, currency=self.currency,
+                                                       main_currency=self.main_currency)
+
+    @property
+    def profitable_price(self):
+        if self.side == 'BUY':
+            return self.profit.profitable_buy_price_for_previous_sell_price(self.average_sell_price_for_buy_trade)
+        elif self.side == 'SELL':
+            return self.profit.profitable_sell_price_for_previous_buy_price(self.average_buy_price_for_sell_trade)
+        else:
+            raise(f'unsupported side {self.side}')

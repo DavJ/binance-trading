@@ -13,8 +13,8 @@ class Asset:
     def __init__(self, currency=None, asset_amount_free=None, asset_amount_locked=None, main_currency='BNB'):
         self.currency = currency
         self.main_currency = main_currency
-        self.asset_amount_free = None if asset_amount_free is None else float(asset_amount_free)
-        self.asset_amount_locked = None if asset_amount_locked is None else float(asset_amount_locked)
+        self.asset_amount_free = None if asset_amount_free is None else Decimal(asset_amount_free)
+        self.asset_amount_locked = None if asset_amount_locked is None else Decimal(asset_amount_locked)
         self.last_buy_price = None
         self.last_sell_price = None
         self.recent_average_buy_price = None
@@ -58,8 +58,8 @@ class Asset:
         client = await get_async_binance_client()
         try:
             res = await client.get_asset_balance(self.currency)
-            self.asset_amount_free = float(res['free'])
-            self.asset_amount_locked = float(res['locked'])
+            self.asset_amount_free = Decimal(res['free'])
+            self.asset_amount_locked = Decimal(res['locked'])
 
         except Exception:
             print(f'cannot get asset info')
@@ -74,8 +74,8 @@ class Asset:
         client = get_binance_client()
         try:
             res = client.get_asset_balance(self.currency)
-            self.asset_amount_free = float(res['free'])
-            self.asset_amount_locked = float(res['locked'])
+            self.asset_amount_free = Decimal(res['free'])
+            self.asset_amount_locked = Decimal(res['locked'])
 
         except Exception:
             print(f'cannot get asset info')
@@ -91,7 +91,7 @@ class Asset:
                 if remaining_amount == 0:
                     break
                 sum += remaining_amount
-                weighted_sum += remaining_amount * float(trade['price'])
+                weighted_sum += remaining_amount * Decimal(trade['price'])
             return weighted_sum / sum
 
         if self.currency != self.main_currency:
@@ -102,7 +102,7 @@ class Asset:
 
             try:
                 last_buy_trade = sorted(buy_trades, key=lambda x: x['time'])[-1]
-                self.last_buy_price = float(last_buy_trade['price'])
+                self.last_buy_price = Decimal(last_buy_trade['price'])
                 self.recent_average_buy_price = calc_average_price_for_asset_amount(self.asset_amount_free, buy_trades)
             except Exception:
                 #set some initial values
@@ -112,7 +112,7 @@ class Asset:
 
             try:
                 last_sell_trade = sorted(sell_trades, key=lambda x: x['time'])[-1]
-                self.last_sell_price = float(last_sell_trade['price'])
+                self.last_sell_price = Decimal(last_sell_trade['price'])
                 self.recent_average_sell_price = calc_average_price_for_asset_amount(self.asset_amount_free, sell_trades)
             except Exception:
                 #set some initial values
@@ -148,8 +148,8 @@ class Asset:
     def update(self, time=None, balance=None):
         self._time = time
         if balance['a'] == self.currency:
-            self.asset_amount_free = float(balance['f'])
-            self.asset_amount_locked = float(balance['l'])
+            self.asset_amount_free = Decimal(balance['f'])
+            self.asset_amount_locked = Decimal(balance['l'])
             self.update_last_trades()
         else:
             raise(f'incorrect asset currency')
