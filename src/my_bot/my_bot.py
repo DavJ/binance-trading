@@ -45,7 +45,7 @@ class Application:
         total_asset_amount_in_main_currency = sum([self.user_ticker.assets[key].asset_amount_in_main_currency_market
                                                    for key in self.user_ticker.assets])
 
-        print(f'Currently having approximately {total_asset_amount_in_main_currency} {CONFIGURATION.MAIN_CURRENCY} in total.\n\n')
+        print(f'\n\nCurrently having approximately {total_asset_amount_in_main_currency} {CONFIGURATION.MAIN_CURRENCY} in total.\n\n')
 
         #BUY algorithm
         for order_book in sorted_order_books:
