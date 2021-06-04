@@ -1,3 +1,4 @@
+import asyncio
 from decimal import Decimal
 from basic_tools import get_binance_client, CONFIGURATION, get_trading_currencies, round_down
 from model.asset import Asset
@@ -33,7 +34,8 @@ class Application:
             for _, order_book in self.order_books.items():
                 order_book.update()
             self.trade()
-            sleep(int(CONFIGURATION.SLEEP))
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(asyncio.sleep(int(CONFIGURATION.SLEEP)))
 
     def trade(self):
         sorted_order_books = sorted(self.order_books.values(), key=lambda x: x.avg_price_difference, reverse=True)
