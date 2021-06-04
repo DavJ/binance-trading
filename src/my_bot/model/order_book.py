@@ -57,3 +57,13 @@ class OrderBook:
                 # does not start with a underscore
                 if not inspect.ismethod(i[1]):
                     print(f'{i[0]} : {i[1]}')
+
+    @property
+    def strategical_buying_price(self):
+        buy_strategy = min(max(0, Decimal(CONFIGURATION.BUY_STRATEGY)), 1)  # must be 0-1, 1 for max profit
+        return buy_strategy * self.min_buy_price + (1-buy_strategy) * self.max_buy_price
+
+    @property
+    def strategical_selling_price(self):
+        sell_strategy = min(max(0, Decimal(CONFIGURATION.SELL_STRATEGY)), 1)  # must be 0-1, 1 for max profit
+        return sell_strategy * self.max_sell_price + (1 - sell_strategy) * self.min_sell_price

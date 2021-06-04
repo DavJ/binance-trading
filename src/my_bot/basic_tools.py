@@ -168,7 +168,7 @@ class Configuration:
     def __init__(self):
         for attribute in ['MODE', 'TRADING_MODE', 'MAIN_CURRENCY', 'TRADING_CURRENCIES', 'MINIMAL_EARNINGS',
                           'MINIMAL_MAIN_CURRENCY_BALANCE', 'MAIN_CURRENCY_FRACTION',
-                          'BUY_FEE', 'SELL_FEE', 'BUY_PROFIT', 'SELL_PROFIT',
+                          'BUY_FEE', 'SELL_FEE', 'BUY_PROFIT', 'SELL_PROFIT', 'BUY_STRATEGY', 'SELL_STRATEGY',
                           'DB_FILE', 'VOLATILITY_LIMIT_FACTOR', 'USE_ASYNC_CLIENT', 'MAX_ASSET_FRACTION', 'SLEEP']:
             setattr(self, attribute, config(attribute))
 

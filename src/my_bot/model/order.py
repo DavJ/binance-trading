@@ -132,6 +132,8 @@ class Order:
         if self.side == 'BUY':
             return min(self.limit_price, self.profitable_price)
         elif self.side == 'SELL':
+            buy_strategy = min(max(0, Decimal(CONFIGURATION.SELL_STRATEGY)), 1)           #must be 0-1, 1 for max profit
+            strategical_selling_price = ()
             return max(self.limit_price, self.profitable_price)
         else:
             raise(f'unsupported side {self.side}')
