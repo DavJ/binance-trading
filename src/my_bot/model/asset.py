@@ -167,4 +167,4 @@ class Asset:
         else:
             client = get_binance_client()
             average_market_price = Decimal(client.get_avg_price(symbol=self.pair)['price'])
-            return (self.asset_amount_free + self.asset_amount_locked) / average_market_price
+            return (self.asset_amount_free + self.asset_amount_locked) * average_market_price
