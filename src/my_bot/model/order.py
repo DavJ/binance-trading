@@ -17,7 +17,7 @@ from src.my_bot.model.profit import Profit
 
 class Order:
 
-    def __init__(self, side=None, currency=None, amount=None, price=None, type='LIMIT', main_currency='BNB'):
+    def __init__(self, side=None, currency=None, amount=None, limit_price=None, type='LIMIT', main_currency='BNB'):
         """
 
         :param side:
@@ -38,10 +38,7 @@ class Order:
         self._info = None
         self.main_currency = main_currency
         self.profit = Profit()
-        if price:
-            self.price = price
-        else:
-            self.price = self.profitable_price
+        self.limit_price = limit_price
 
 
         print(str(self))
@@ -127,5 +124,14 @@ class Order:
             return self.profit.profitable_buy_price_for_previous_sell_price(self.average_sell_price_for_buy_trade)
         elif self.side == 'SELL':
             return self.profit.profitable_sell_price_for_previous_buy_price(self.average_buy_price_for_sell_trade)
+        else:
+            raise(f'unsupported side {self.side}')
+
+    @property
+    def price(self):
+        if self.side == 'BUY':
+            return min(self.limit_price, self.profitable_price)
+        elif self.side == 'SELL':
+            return max(self.limit_price, self.profitable_price)
         else:
             raise(f'unsupported side {self.side}')
