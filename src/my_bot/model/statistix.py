@@ -50,14 +50,14 @@ class Statistix:
 
     def price_eligible_for_buy(self, price, low_ratio='0.05', high_ratio='0.3'):
         self.update()
-        min_eligible_price = Decimal(low_ratio) * self.max_price - (1- Decimal(low_ratio)) * self.min_price
-        max_eligible_price = Decimal(high_ratio) * self.max_price - (1 - Decimal(high_ratio)) * self.min_price
+        min_eligible_price = Decimal(low_ratio) * self.max_price + (1- Decimal(low_ratio)) * self.min_price
+        max_eligible_price = Decimal(high_ratio) * self.max_price + (1 - Decimal(high_ratio)) * self.min_price
 
         return  min_eligible_price < price < max_eligible_price
 
     def price_eligible_for_sell(self, price, low_ratio='0.7', high_ratio='0.95'):
         self.update()
-        min_eligible_price = Decimal(low_ratio) * self.max_price - (1 - Decimal(low_ratio)) * self.min_price
-        max_eligible_price = Decimal(high_ratio) * self.max_price - (1 - Decimal(high_ratio)) * self.min_price
+        min_eligible_price = Decimal(low_ratio) * self.max_price + (1 - Decimal(low_ratio)) * self.min_price
+        max_eligible_price = Decimal(high_ratio) * self.max_price + (1 - Decimal(high_ratio)) * self.min_price
 
-        return min_eligible_price < price < max_eligible_price
+_        return min_eligible_price < price < max_eligible_price
