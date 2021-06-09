@@ -60,4 +60,4 @@ class Statistix:
         min_eligible_price = Decimal(low_ratio) * self.max_price + (1 - Decimal(low_ratio)) * self.min_price
         max_eligible_price = Decimal(high_ratio) * self.max_price + (1 - Decimal(high_ratio)) * self.min_price
 
-_        return min_eligible_price < price < max_eligible_price
+        return min_eligible_price < price < max_eligible_price
