@@ -34,9 +34,9 @@ class Application:
             for _, order_book in self.order_books.items():
                 order_book.update()
             self.trade()
-            #loop = asyncio.get_event_loop()
-            #loop.run_until_complete(asyncio.sleep(int(CONFIGURATION.SLEEP)))
-            sleep(int(CONFIGURATION.SLEEP))
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(asyncio.sleep(int(CONFIGURATION.SLEEP)))
+            #sleep(int(CONFIGURATION.SLEEP))
 
     def trade(self):
         sorted_order_books = sorted(self.order_books.values(), key=lambda x: x.avg_price_difference, reverse=True)
@@ -56,17 +56,20 @@ class Application:
             allowed_buy_amount_in_main_currency = max(0, buy_amount_in_main_currency - max_asset_amount_allowed_in_main_currency)
 
             asset = self.user_ticker.assets[order_book.currency]
-            if (allowed_buy_amount_in_main_currency > 0):
+            limit_price = order_book.strategical_buying_price
+
+            if (allowed_buy_amount_in_main_currency > 0) and asset.statistix.price_eligible_for_buy(limit_price):
                 buy_amount = allowed_buy_amount_in_main_currency / order_book.avg_buy_price
                 self.active_orders.append(
-                    Order(side='BUY', currency=asset.currency, amount=buy_amount, limit_price=order_book.strategical_buying_price))
+                    Order(side='BUY', currency=asset.currency, amount=buy_amount, limit_price=limit_price))
 
         #SELL algorithm
         for order_book in self.order_books.values():
             asset = self.user_ticker.assets[order_book.currency]
             max_sell_amount = asset.asset_amount_free
-            if (max_sell_amount > 0):
-                   self.active_orders.append(Order(side='SELL', currency=asset.currency, amount=max_sell_amount, limit_price=order_book.strategical_selling_price))
+            limit_price = order_book.strategical_selling_price
+            if (max_sell_amount > 0) and asset.statistix.price_eligible_for_sell(limit_price):
+                   self.active_orders.append(Order(side='SELL', currency=asset.currency, amount=max_sell_amount, limit_price=limit_price))
 
         print('trading iteration finished \n\n')
 

@@ -5,6 +5,8 @@ import asyncio
 import datetime
 import aiosqlite
 import json
+from src.my_bot.model.statistix import Statistix
+
 
 from src.my_bot.basic_tools import (CONFIGURATION, get_binance_client, get_async_binance_client,
                                     ilen, get_order_book_statistics)
@@ -22,6 +24,10 @@ class Asset:
         self.recent_average_sell_price = None
         self._time = None
         self._id = None
+        if self.currency != self.main_currency:
+            self.statistix = Statistix(currency=self.currency, main_currency=self.main_currency)
+        else:
+            self.statistix = None
 
         if asset_amount_free is None or asset_amount_locked is None:
             # get balances from Binance
