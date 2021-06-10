@@ -8,6 +8,7 @@ from model.user_ticker import UserTicker
 from model.order import Order
 from model.profit import Profit
 from time import sleep
+from datetime import datetime
 import math
 
 class Application:
@@ -71,7 +72,7 @@ class Application:
             if (max_sell_amount > 0) and asset.statistix.price_eligible_for_sell(limit_price):
                    self.active_orders.append(Order(side='SELL', currency=asset.currency, amount=max_sell_amount, limit_price=limit_price))
 
-        print('trading iteration finished \n\n')
+        print(f'trading iteration finished  at {datetime.now().isoformat()}\n\n')
 
 if __name__ == "__main__":
     application = Application()
