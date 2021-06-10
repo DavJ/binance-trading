@@ -19,10 +19,8 @@ class Application:
         self.order_books = {}
         self.main_currency = CONFIGURATION.MAIN_CURRENCY
         self.minimal_main_currency_balance = Decimal(CONFIGURATION.MINIMAL_MAIN_CURRENCY_BALANCE)
-        self.main_currency_fraction = Decimal(CONFIGURATION.MAIN_CURRENCY_FRACTION)
         self.buy_fee = Decimal(CONFIGURATION.BUY_FEE)
         self.sell_fee = Decimal(CONFIGURATION.SELL_FEE)
-        self.minimal_earnings = Decimal(CONFIGURATION.MINIMAL_EARNINGS)
         self.active_orders = []
         self.profit = Profit()
 
@@ -52,7 +50,7 @@ class Application:
         for order_book in sorted_order_books:
             if self.user_ticker.assets[self.main_currency].asset_amount_free <= self.minimal_main_currency_balance:
                 break
-            buy_amount_in_main_currency = (self.user_ticker.assets[self.main_currency].asset_amount_free - self.minimal_main_currency_balance) * self.main_currency_fraction
+            buy_amount_in_main_currency = (self.user_ticker.assets[self.main_currency].asset_amount_free - self.minimal_main_currency_balance)
             max_asset_amount_allowed_in_main_currency = total_asset_amount_in_main_currency * Decimal(CONFIGURATION.MAX_ASSET_FRACTION)
             allowed_buy_amount_in_main_currency = max(0, buy_amount_in_main_currency - max_asset_amount_allowed_in_main_currency)
 
