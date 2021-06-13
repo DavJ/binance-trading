@@ -87,6 +87,8 @@ def get_order_book_statistics(pair):
     _bids = ticker['bids']
     _asks = ticker['asks']
 
+    avg_current_price = Decimal(client.get_avg_price(symbol=pair)['price'])
+
     total_bid = sum([Decimal(bid[1]) for bid in _bids])
     total_ask = sum([Decimal(ask[1]) for ask in _asks])
     avg_buy_price = sum([Decimal(bid[0]) * Decimal(bid[1]) for bid in _bids]) / total_bid
@@ -95,6 +97,8 @@ def get_order_book_statistics(pair):
     max_sell_price = max([Decimal(ask[0]) for ask in _asks])
     min_buy_price = min([Decimal(bid[0]) for bid in _bids])
     max_price_difference = max_sell_price - min_buy_price
+
+
 
     return dict(
         _bids = _bids,
@@ -110,7 +114,8 @@ def get_order_book_statistics(pair):
         avg_price_difference=avg_price_difference,
         avg_price_relative_difference=2 * avg_price_difference / (avg_sell_price + avg_buy_price),
         max_price_difference=max_price_difference,
-        max_price_relative_difference=2 * max_price_difference / (max_sell_price + min_buy_price)
+        max_price_relative_difference=2 * max_price_difference / (max_sell_price + min_buy_price),
+        avg_current_price=avg_current_price
     )
 
 
@@ -168,7 +173,8 @@ class Configuration:
     def __init__(self):
         for attribute in ['MAIN_CURRENCY', 'TRADING_CURRENCIES', 'MINIMAL_MAIN_CURRENCY_BALANCE',
                           'BUY_FEE', 'SELL_FEE', 'BUY_PROFIT', 'SELL_PROFIT', 'BUY_STRATEGY', 'SELL_STRATEGY',
-                          'DB_FILE', 'USE_ASYNC_CLIENT', 'MAX_ASSET_FRACTION', 'SLEEP']:
+                          'DB_FILE', 'USE_ASYNC_CLIENT', 'MAX_ASSET_FRACTION', 'SLEEP',
+                          'BUY_DAILY_CHANGER', 'SELL_DAILY_CHANGER']:
             setattr(self, attribute, config(attribute))
 
 

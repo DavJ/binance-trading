@@ -57,7 +57,7 @@ class Application:
             asset = self.user_ticker.assets[order_book.currency]
             limit_price = order_book.strategical_buying_price
 
-            if (allowed_buy_amount_in_main_currency > 0) and asset.statistix.price_eligible_for_buy(limit_price):
+            if (allowed_buy_amount_in_main_currency > 0) and asset.statistix.eligible_for_buy():
                 buy_amount = allowed_buy_amount_in_main_currency / order_book.avg_buy_price
                 self.active_orders.append(
                     Order(side='BUY', currency=asset.currency, amount=buy_amount, limit_price=limit_price))
@@ -67,7 +67,7 @@ class Application:
             asset = self.user_ticker.assets[order_book.currency]
             max_sell_amount = asset.asset_amount_free
             limit_price = order_book.strategical_selling_price
-            if (max_sell_amount > 0) and asset.statistix.price_eligible_for_sell(limit_price):
+            if (max_sell_amount > 0) and asset.statistix.eligible_for_sell():
                    self.active_orders.append(Order(side='SELL', currency=asset.currency, amount=max_sell_amount, limit_price=limit_price))
 
         print(f'trading iteration finished  at {datetime.now().isoformat()}\n\n')

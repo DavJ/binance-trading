@@ -39,8 +39,8 @@ class Asset:
 
         self.update_last_trades()
 
-        loop_db = asyncio.get_event_loop()
-        loop_db.run_until_complete(self.__aio_link__())
+        #loop_db = asyncio.get_event_loop()
+        #loop_db.run_until_complete(self.__aio_link__())
 
     def __repr__(self):
         return f"Asset(currency='{self.currency}, asset_amount_free={self.asset_amount_free}, asset_amount_locked={self.asset_amount_locked})"

@@ -35,6 +35,7 @@ class OrderBook:
         self.avg_price_relative_difference = None
         self.max_price_difference = None
         self.max_price_relative_difference = None
+        self.avg_current_price = None
         self.update()
 
     def __repr__(self):
@@ -60,10 +61,12 @@ class OrderBook:
 
     @property
     def strategical_buying_price(self):
-        buy_strategy = min(max(0, Decimal(CONFIGURATION.BUY_STRATEGY)), 1)  # must be 0-1, 1 for max profit
-        return buy_strategy * self.min_buy_price + (1-buy_strategy) * self.max_buy_price
+        buy_strategy = max(0, Decimal(CONFIGURATION.BUY_STRATEGY))  # must be >=0 increase for max profit
+        #return buy_strategy * self.min_buy_price + (1-buy_strategy) * self.max_buy_price
+        return buy_strategy * self.avg_buy_price + (1 - buy_strategy) * self.avg_current_price
 
     @property
     def strategical_selling_price(self):
-        sell_strategy = min(max(0, Decimal(CONFIGURATION.SELL_STRATEGY)), 1)  # must be 0-1, 1 for max profit
-        return sell_strategy * self.max_sell_price + (1 - sell_strategy) * self.min_sell_price
+        sell_strategy = max(0, Decimal(CONFIGURATION.SELL_STRATEGY))  # must be >=0 increase for max profit
+        #return sell_strategy * self.max_sell_price + (1 - sell_strategy) * self.min_sell_price
+        return sell_strategy * self.avg_sell_price + (1 - sell_strategy) * self.avg_current_price

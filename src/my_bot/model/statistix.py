@@ -20,7 +20,8 @@ class Statistix:
         self.average_price=None
         self.max_price = None
         self.min_price = None
-        self.average_volume=None
+        self.average_volume = None
+        self.daily_changer = None
 
         #self.previous_time = time.time() if time is None else time
 
@@ -38,26 +39,44 @@ class Statistix:
         self.average_price = sum(prices)/len(prices)
         self.max_price = max([Decimal(kline[1]) for kline in klines])
         self.min_price = min([Decimal(kline[2]) for kline in klines])
-        self.latest_price = prices[-1]
 
-        #daily_changer = client.get_ticker(self.pair)
+        changer = client.get_ticker(symbol=self.pair)
+        self.daily_changer = Decimal(changer['priceChangePercent'])
+        self.last_price = Decimal(changer['lastPrice'])
 
 
     @property
     def pair(self):
         return self.currency + self.main_currency
 
+    @property
+    def daily_changer_eligible_for_buy(self):
+        return self.daily_changer < Decimal(CONFIGURATION.BUY_DAILY_CHANGER)
 
-    def price_eligible_for_buy(self, price, low_ratio='0.05', high_ratio='0.3'):
+    @property
+    def daily_changer_eligible_for_sell(self):
+        return self.daily_changer > Decimal(CONFIGURATION.SELL_DAILY_CHANGER)
+
+    def price_eligible_for_buy(self, low_ratio='0.04', high_ratio='0.33'):
         self.update()
         min_eligible_price = Decimal(low_ratio) * self.max_price + (1- Decimal(low_ratio)) * self.min_price
         max_eligible_price = Decimal(high_ratio) * self.max_price + (1 - Decimal(high_ratio)) * self.min_price
 
-        return  min_eligible_price < price < max_eligible_price
+        return min_eligible_price < self.last_price < max_eligible_price
 
-    def price_eligible_for_sell(self, price, low_ratio='0.7', high_ratio='0.95'):
+    def price_eligible_for_sell(self, low_ratio='0.67', high_ratio='0.93'):
         self.update()
         min_eligible_price = Decimal(low_ratio) * self.max_price + (1 - Decimal(low_ratio)) * self.min_price
         max_eligible_price = Decimal(high_ratio) * self.max_price + (1 - Decimal(high_ratio)) * self.min_price
 
-        return min_eligible_price < price < max_eligible_price
+        return min_eligible_price < self.last_price < max_eligible_price
+
+    def eligible_for_buy(self):
+        self.update()
+        return self.price_eligible_for_buy() and self.daily_changer_eligible_for_buy
+        #return self.daily_changer_eligible_for_buy
+
+    def eligible_for_sell(self):
+        self.update()
+        return self.price_eligible_for_sell() and self.daily_changer_eligible_for_sell
+        #return self.daily_changer_eligible_for_sell
