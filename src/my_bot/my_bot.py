@@ -58,7 +58,7 @@ class Application:
             limit_price = order_book.strategical_buying_price
 
             if (allowed_buy_amount_in_main_currency > 0) and asset.statistix.eligible_for_buy():
-                buy_amount = allowed_buy_amount_in_main_currency / order_book.avg_buy_price
+                buy_amount = max(0, allowed_buy_amount_in_main_currency / order_book.avg_buy_price - asset.asset_amount_total)
                 self.active_orders.append(
                     Order(side='BUY', currency=asset.currency, amount=buy_amount, limit_price=limit_price))
 

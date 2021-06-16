@@ -167,9 +167,13 @@ class Asset:
             raise (f'incorrect asset currency')
 
     @property
+    def asset_amount_total(self):
+        return self.asset_amount_free + self.asset_amount_locked
+
+    @property
     def asset_amount_in_main_currency_market(self):
         if self.currency == self.main_currency:
-            return (self.asset_amount_free + self.asset_amount_locked)
+            return self.asset_amount_total
         else:
             client = get_binance_client()
             average_market_price = Decimal(client.get_avg_price(symbol=self.pair)['price'])
