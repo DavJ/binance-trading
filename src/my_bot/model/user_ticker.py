@@ -68,7 +68,11 @@ class UserTicker:
             if msg['e'] == 'outboundAccountPosition':
                 for balance in msg['B']:
                     message_time = datetime.datetime.fromtimestamp(int(msg['E']) / 1000)
-                    self.assets[balance['a']].update(time=message_time, balance=balance)
+                    try:
+                        self.assets[balance['a']].update(time=message_time, balance=balance)
+                    except KeyError:
+                        print(f"WARNING: Asset {balance['a']} does not exist")
+
 
             pass
 
