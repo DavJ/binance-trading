@@ -17,7 +17,7 @@ from src.my_bot.model.profit import Profit
 
 class Order:
 
-    def __init__(self, side=None, currency=None, amount=None, limit_price=None, type='LIMIT', main_currency='BNB'):
+    def __init__(self, side=None, currency=None, amount=None, limit_price=None, type='LIMIT', main_currency=CONFIGURATION.MAIN_CURRENCY):
         """
 
         :param side:

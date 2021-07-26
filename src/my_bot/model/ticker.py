@@ -13,7 +13,7 @@ from src.my_bot.model.chart import Chart
 
 class Ticker:
 
-    def __init__(self, currency=None, asset_currency='BNB'):
+    def __init__(self, currency=None, asset_currency=CONFIGURATION.MAIN_CURRENCY):
         self.currency = currency
         self.asset_currency = asset_currency
         self.pair = currency + asset_currency

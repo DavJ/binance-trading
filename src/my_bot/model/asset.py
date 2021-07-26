@@ -13,7 +13,7 @@ from src.my_bot.basic_tools import (CONFIGURATION, get_binance_client, get_async
 
 
 class Asset:
-    def __init__(self, currency=None, asset_amount_free=None, asset_amount_locked=None, main_currency='BNB'):
+    def __init__(self, currency=None, asset_amount_free=None, asset_amount_locked=None, main_currency=CONFIGURATION.MAIN_CURRENCY):
         self.currency = currency
         self.main_currency = main_currency
         self.asset_amount_free = None if asset_amount_free is None else Decimal(asset_amount_free)
