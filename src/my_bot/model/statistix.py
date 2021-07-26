@@ -77,6 +77,8 @@ class Statistix:
         #return self.daily_changer_eligible_for_buy
 
     def eligible_for_sell(self):
-        self.update()
-        return self.price_eligible_for_sell() and self.daily_changer_eligible_for_sell
-        #return self.daily_changer_eligible_for_sell
+        if CONFIGURATION.SELL_IMMEDIATELY:
+           return True
+        else:
+            self.update()
+            return self.price_eligible_for_sell() and self.daily_changer_eligible_for_sell

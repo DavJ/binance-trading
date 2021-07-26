@@ -174,7 +174,7 @@ class Configuration:
         for attribute in ['MAIN_CURRENCY', 'TRADING_CURRENCIES', 'MINIMAL_MAIN_CURRENCY_BALANCE',
                           'BUY_FEE', 'SELL_FEE', 'BUY_PROFIT', 'SELL_PROFIT', 'BUY_STRATEGY', 'SELL_STRATEGY',
                           'DB_FILE', 'USE_ASYNC_CLIENT', 'MAX_ASSET_FRACTION', 'SLEEP',
-                          'BUY_DAILY_CHANGER', 'SELL_DAILY_CHANGER']:
+                          'BUY_DAILY_CHANGER', 'SELL_DAILY_CHANGER', 'SELL_IMMEDIATELY']:
             setattr(self, attribute, config(attribute))
 
 
