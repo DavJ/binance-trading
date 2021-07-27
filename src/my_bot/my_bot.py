@@ -59,8 +59,9 @@ class Application:
 
             if (allowed_buy_amount_in_main_currency > 0) and asset.statistix.eligible_for_buy():
                 buy_amount = max(0, allowed_buy_amount_in_main_currency / order_book.avg_buy_price - asset.asset_amount_total)
-                self.active_orders.append(
-                    Order(side='BUY', currency=asset.currency, amount=buy_amount, limit_price=limit_price))
+                if not CONFIGURATION.PLACE_BUY_ORDER_ONLY_IF_PRICE_MATCHES or order_book.min_buy_price <= limit_price:
+                    self.active_orders.append(
+                        Order(side='BUY', currency=asset.currency, amount=buy_amount, limit_price=limit_price))
 
         #SELL algorithm
         for order_book in self.order_books.values():
