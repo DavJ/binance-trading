@@ -67,6 +67,9 @@ class Application:
         for order_book in self.order_books.values():
             asset = self.user_ticker.assets[order_book.currency]
             max_sell_amount = asset.asset_amount_free
+
+
+
             limit_price = order_book.strategical_selling_price
             if (max_sell_amount > 0) and asset.statistix.eligible_for_sell():
                    self.active_orders.append(Order(side='SELL', currency=asset.currency, amount=max_sell_amount, limit_price=limit_price))
