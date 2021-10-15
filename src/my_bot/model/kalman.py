@@ -62,8 +62,11 @@ class Kalman:
        :param dt:
        :return:
        """
+
+
        tm = self.transition_matrix((time-self.previous_time).total_seconds())
-       return np.matmul(self.state, tm)[0][0]
+       future_state = np.matmul(tm, self.state)
+       return future_state[0][0]
 
     @property
     def value(self):

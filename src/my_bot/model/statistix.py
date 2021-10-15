@@ -72,7 +72,7 @@ class Statistix:
 
     def eligible_for_buy(self):
         self.update()
-        return self.price_eligible_for_buy() and self.daily_changer_eligible_for_buy
+        return self.price_eligible_for_buy() #and self.daily_changer_eligible_for_buy
         # return self.daily_changer_eligible_for_buy
 
     def eligible_for_sell(self):
@@ -80,4 +80,4 @@ class Statistix:
             return True
         else:
             self.update()
-            return self.price_eligible_for_sell() and self.daily_changer_eligible_for_sell
+            return self.price_eligible_for_sell() #and self.daily_changer_eligible_for_sell
