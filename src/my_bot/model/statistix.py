@@ -28,7 +28,7 @@ class Statistix:
         self.update()
 
     def __repr__(self):
-        return f"Statistix(time={self.previous_time}, last_price={self.last_price}, last_volume={self.last_volume}, n_dim={self.n_dim})"
+        return f"Statistix(currency={self.currency}, main_currency={self.main_currency})"
 
     def update(self):
         client = get_binance_client()

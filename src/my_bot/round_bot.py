@@ -11,28 +11,50 @@ from time import sleep
 from datetime import datetime
 import math
 
+from src.my_bot.model.statistix import Statistix
+
+
 class Application:
 
     def __init__(self):
-        self.user_ticker = UserTicker()
-        self.symbol_tickers = {}
-        self.order_books = {}
-        self.main_currency = CONFIGURATION.MAIN_CURRENCY
-        self.minimal_main_currency_balance = Decimal(CONFIGURATION.MINIMAL_MAIN_CURRENCY_BALANCE)
-        self.buy_fee = Decimal(CONFIGURATION.BUY_FEE)
-        self.sell_fee = Decimal(CONFIGURATION.SELL_FEE)
-        self.active_orders = []
-        self.profit = Profit()
+        #self.user_ticker = UserTicker()
+        #self.symbol_tickers = {}
+        #self.order_books = {}
+        #self.main_currency = CONFIGURATION.MAIN_CURRENCY
+        #self.minimal_main_currency_balance = Decimal(CONFIGURATION.MINIMAL_MAIN_CURRENCY_BALANCE)
+        #self.buy_fee = Decimal(CONFIGURATION.BUY_FEE)
+        #self.sell_fee = Decimal(CONFIGURATION.SELL_FEE)
+        #self.active_orders = []
+        #self.profit = Profit()
 
-        for currency in get_trading_currencies():
-            self.symbol_tickers.update(**{currency: Ticker(currency)})
-            self.order_books.update(**{currency: OrderBook(currency)})
+        trading_currencies = get_trading_currencies()
+
+        statistix_array = {}
+
+        for currency1 in trading_currencies:
+            row = {}
+            for currency2 in trading_currencies:
+                if currency1 != currency2:
+                    try:
+                        statistix = Statistix(currency=currency1, main_currency=currency2)
+                    except:
+                         statistix = None
+                else:
+                    statistix = None
+
+                row.update(**{currency2: statistix})
+            statistix_array.update(**{currency1: row})
+
+            #self.symbol_tickers.update(**{currency: Ticker(currency)})
+            #self.order_books.update(**{currency: OrderBook(currency)})
+        pass
+
 
     def main(self):
         while True:
             for _, order_book in self.order_books.items():
                 order_book.update()
-            self.trade()
+            #self.trade()
             loop = asyncio.get_event_loop()
             loop.run_until_complete(asyncio.sleep(int(CONFIGURATION.SLEEP)))
             #sleep(int(CONFIGURATION.SLEEP))

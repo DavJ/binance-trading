@@ -83,3 +83,18 @@ class Ticker:
             self._chart = Chart(time=self.time, value=self.last_price)
         else:
             self._chart.update(time=self.time, value=self.last_price)
+
+    @property
+    def predict_price(self):
+        try:
+            return {2**n: self._filter.predict_value(datetime.datetime.now() + datetime.timedelta(hours=2**n)) for n in range(0, 10)}
+        except AttributeError:
+            return None
+
+    @property
+    def predict_price_move(self):
+        try:
+            return {2 ** n: 100.0*(self._filter.predict_value(datetime.datetime.now() + datetime.timedelta(hours=2 ** n))-self.last_price)/self.last_price for n
+                    in range(0, 10)}
+        except AttributeError:
+            return None
