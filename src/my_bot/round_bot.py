@@ -52,12 +52,12 @@ class Application:
         if (currency1, currency2) in TRADING_PAIRS:
             statistix = self.statistix_pairs[currency1 + currency2]
             statistix.update()
-            price = statistix.order_book.avg_sell_price
+            price = statistix.order_book.max_buy_price
 
         elif (currency2, currency1) in TRADING_PAIRS:
             statistix = self.statistix_pairs[currency2 + currency1]
             statistix.update()
-            reverse_price = statistix.order_book.avg_buy_price
+            reverse_price = statistix.order_book.min_sell_price
             if reverse_price != 0:
                 price = 1 / reverse_price
             else:
@@ -76,9 +76,13 @@ class Application:
             while len(path) > 0:
                 pair = path[:2]
                 path = path[2::]
-                multiplicator = multiplicator * self.average_sell_price(pair[0], pair[1])
+                try:
+                    multiplicator = multiplicator * self.average_sell_price(pair[0], pair[1])
+                except TypeError:
+                    multiplicator = None
 
-            evaluated_rounds.append((multiplicator, round))
+            if multiplicator > 1:
+                evaluated_rounds.append((multiplicator, round))
 
         return sorted(evaluated_rounds, reverse=True)
 
