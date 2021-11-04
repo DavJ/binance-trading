@@ -11,10 +11,12 @@ from binance import Client
 from src.my_bot.basic_tools import (CONFIGURATION, get_binance_client, get_async_binance_client,
                                     use_async_client, get_async_web_socket_manager, get_threaded_web_socket_manager)
 
+from src.my_bot.model.ticker import Ticker
+from src.my_bot.model.order_book import OrderBook
 
 class Statistix:
 
-    def __init__(self, currency=None, main_currency='BNB'):
+    def __init__(self, currency=None, main_currency='BNB', add_tickers=False, add_order_book=False):
         self.currency = currency
         self.main_currency = main_currency
         self.average_price = None
@@ -22,6 +24,17 @@ class Statistix:
         self.min_price = None
         self.average_volume = None
         self.daily_changer = None
+
+        if add_tickers:
+           self.pair_ticker = Ticker(currency, main_currency)
+        else:
+           self.pair_ticker = None
+
+        if add_order_book:
+           self.order_book = OrderBook(currency, main_currency)
+        else:
+           self.order_book = None
+
 
         # self.previous_time = time.time() if time is None else time
 
@@ -55,6 +68,9 @@ class Statistix:
         changer = client.get_ticker(symbol=self.pair)
         self.daily_changer = Decimal(changer['priceChangePercent'])
         self.last_price = Decimal(changer['lastPrice'])
+
+        if self.order_book is not None:
+            self.order_book.update
 
     @property
     def pair(self):

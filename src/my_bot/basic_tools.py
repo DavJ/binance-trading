@@ -143,7 +143,15 @@ def get_order_book_statistics(pair):
     except TypeError:
         max_price_difference = None
 
+    try:
+        avg_price_relative_difference = 2 * avg_price_difference / (avg_sell_price + avg_buy_price)
+    except TypeError:
+        avg_price_relative_difference = None
 
+    try:
+        max_price_relative_difference = 2 * max_price_difference / (max_sell_price + min_buy_price)
+    except TypeError:
+        max_price_relative_difference = None
 
     return dict(
         _bids = _bids,
@@ -157,9 +165,9 @@ def get_order_book_statistics(pair):
         total_ask=total_ask,
         avg_sell_price=avg_sell_price,
         avg_price_difference=avg_price_difference,
-        avg_price_relative_difference=2 * avg_price_difference / (avg_sell_price + avg_buy_price),
+        avg_price_relative_difference=avg_price_relative_difference,
         max_price_difference=max_price_difference,
-        max_price_relative_difference=2 * max_price_difference / (max_sell_price + min_buy_price),
+        max_price_relative_difference=max_price_relative_difference,
         avg_current_price=avg_current_price
     )
 
