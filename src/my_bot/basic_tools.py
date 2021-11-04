@@ -42,7 +42,6 @@ def get_java_name(text, title_first=True):
     else:
         return ''.join([init.lower(), *map(str.title, temp)])
 
-
 def get_currency_pair(currency1, currency2):
     sorted_pair = sorted([currency1, currency2])  # assume pairs are created alphabetically
     return sorted_pair[0] + sorted_pair[1]
@@ -51,6 +50,16 @@ def get_currency_pair(currency1, currency2):
 def get_trading_currencies():
     return (config('TRADING_CURRENCIES').replace(' ', '').split(','))
 
+def get_exchange_info():
+    return get_binance_client().get_exchange_info()
+
+def get_trading_pairs():
+    trading_currencies = get_trading_currencies()
+    trading_symbols = {s['symbol'] for s in get_exchange_info()['symbols']}
+    for currency1 in trading_currencies:
+        for currency2 in trading_currencies:
+            if currency1 + currency2 in trading_symbols:
+                yield (currency1, currency2)
 
 def get_evaluation_currencies():
     return get_trading_currencies() + [config('MAIN_CURRENCY')]

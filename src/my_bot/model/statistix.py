@@ -36,9 +36,21 @@ class Statistix:
         klines = client.get_historical_klines(self.pair, Client.KLINE_INTERVAL_1MINUTE, "1 day ago UTC")
         prices = [Decimal(kline[3]) for kline in klines]
 
-        self.average_price = sum(prices) / len(prices)
-        self.max_price = max([Decimal(kline[1]) for kline in klines])
-        self.min_price = min([Decimal(kline[2]) for kline in klines])
+        if len(prices) != 0:
+            self.average_price = sum(prices) / len(prices)
+        else:
+            self.average_price = None
+
+        try:
+            self.max_price = max([Decimal(kline[1]) for kline in klines])
+
+        except ValueError:
+            self.max_price = None
+
+        try:
+            self.min_price = min([Decimal(kline[2]) for kline in klines])
+        except ValueError:
+            self.min_price = None
 
         changer = client.get_ticker(symbol=self.pair)
         self.daily_changer = Decimal(changer['priceChangePercent'])

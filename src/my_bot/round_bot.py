@@ -1,6 +1,6 @@
 import asyncio
 from decimal import Decimal
-from basic_tools import get_binance_client, CONFIGURATION, get_trading_currencies, round_down
+from basic_tools import get_binance_client, CONFIGURATION, get_trading_currencies, round_down, get_trading_pairs
 from model.asset import Asset
 from model.ticker import Ticker
 from model.order_book import OrderBook
@@ -10,6 +10,7 @@ from model.profit import Profit
 from time import sleep
 from datetime import datetime
 import math
+from binance.exceptions import BinanceAPIException
 
 from src.my_bot.model.statistix import Statistix
 
@@ -27,26 +28,21 @@ class Application:
         #self.active_orders = []
         #self.profit = Profit()
 
-        trading_currencies = get_trading_currencies()
 
-        statistix_array = {}
+        #self.symbol_tickers.update(**{currency: Ticker(currency)})
+        #self.order_books.update(**{currency: OrderBook(currency)})
+        pass
 
-        for currency1 in trading_currencies:
-            row = {}
-            for currency2 in trading_currencies:
-                if currency1 != currency2:
-                    try:
-                        statistix = Statistix(currency=currency1, main_currency=currency2)
-                    except:
-                         statistix = None
-                else:
-                    statistix = None
+        #def statistix_pair_generator():
+        #    for currency1 in get_trading_currencies():
+        #        for currency2 in get_trading_currencies():
+        #            if currency1 != currency2:
+        #                try:
+        #                   yield currency1, currency2, Statistix(currency=currency1, main_currency=currency2)
+        #                except BinanceAPIException as exc:
+        #                  pass
 
-                row.update(**{currency2: statistix})
-            statistix_array.update(**{currency1: row})
-
-            #self.symbol_tickers.update(**{currency: Ticker(currency)})
-            #self.order_books.update(**{currency: OrderBook(currency)})
+        self.statistix_pairs = [Statistix(currency=curr1, main_currency=curr2) for curr1, curr2 in get_trading_pairs()]
         pass
 
 
