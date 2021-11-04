@@ -78,7 +78,7 @@ class Application:
                 path = path[2::]
                 multiplicator = multiplicator * self.average_sell_price(pair[0], pair[1])
 
-            evaluated_rounds.append[(multiplicator, round)]
+            evaluated_rounds.append((multiplicator, round))
 
         return sorted(evaluated_rounds, reverse=True)
 
