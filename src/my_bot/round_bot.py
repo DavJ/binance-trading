@@ -14,6 +14,9 @@ from binance.exceptions import BinanceAPIException
 
 from src.my_bot.model.statistix import Statistix
 
+TRADING_CURRENCIES = get_trading_currencies()
+TRADING_PAIRS = get_trading_pairs()
+DIRECTIONAL_PAIRS = [pair for pair in TRADING_PAIRS] + [(pair[1], pair[0]) for pair in TRADING_PAIRS]
 
 class Application:
 
@@ -43,6 +46,27 @@ class Application:
         #                  pass
 
         self.statistix_pairs = [Statistix(currency=curr1, main_currency=curr2) for curr1, curr2 in get_trading_pairs()]
+
+        def possible_paths(currency, max_depth=3):
+            paths = []
+            if max_depth > 0:
+                matching_pairs = [pair for pair in DIRECTIONAL_PAIRS if pair[0] == currency]
+                for pair in matching_pairs:
+                    paths.append(pair)
+                    for next_path in possible_paths(pair[1], max_depth=max_depth-1):
+                        paths.append(pair + next_path)
+
+            return paths
+
+        def possible_rounds():
+            rounds = []
+            for c in TRADING_CURRENCIES:
+                for p in possible_paths(c):
+                    if p[-1] == c:
+                        rounds.append(p)
+            return rounds
+
+        self.possible_rounds = possible_rounds()
         pass
 
 

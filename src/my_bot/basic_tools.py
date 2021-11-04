@@ -54,12 +54,14 @@ def get_exchange_info():
     return get_binance_client().get_exchange_info()
 
 def get_trading_pairs():
+    pairs = []
     trading_currencies = get_trading_currencies()
     trading_symbols = {s['symbol'] for s in get_exchange_info()['symbols']}
     for currency1 in trading_currencies:
         for currency2 in trading_currencies:
             if currency1 + currency2 in trading_symbols:
-                yield (currency1, currency2)
+                pairs.append((currency1, currency2,))
+    return pairs
 
 def get_evaluation_currencies():
     return get_trading_currencies() + [config('MAIN_CURRENCY')]
