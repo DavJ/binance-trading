@@ -1,6 +1,7 @@
 import asyncio
 from decimal import Decimal
-from basic_tools import get_binance_client, CONFIGURATION, get_trading_currencies, round_down, get_trading_pairs
+from basic_tools import (get_binance_client, CONFIGURATION, get_trading_currencies,
+                         round_down, get_trading_pairs, possible_rounds, TRADING_PAIRS)
 from model.asset import Asset
 from model.ticker import Ticker
 from model.order_book import OrderBook
@@ -14,9 +15,6 @@ from binance.exceptions import BinanceAPIException
 
 from src.my_bot.model.statistix import Statistix
 
-TRADING_CURRENCIES = get_trading_currencies()
-TRADING_PAIRS = get_trading_pairs()
-DIRECTIONAL_PAIRS = [pair for pair in TRADING_PAIRS] + [(pair[1], pair[0]) for pair in TRADING_PAIRS]
 
 class Application:
 
@@ -45,29 +43,44 @@ class Application:
         #                except BinanceAPIException as exc:
         #                  pass
 
-        self.statistix_pairs = [Statistix(currency=curr1, main_currency=curr2) for curr1, curr2 in get_trading_pairs()]
-
-        def possible_paths(currency, max_depth=3):
-            paths = []
-            if max_depth > 0:
-                matching_pairs = [pair for pair in DIRECTIONAL_PAIRS if pair[0] == currency]
-                for pair in matching_pairs:
-                    paths.append(pair)
-                    for next_path in possible_paths(pair[1], max_depth=max_depth-1):
-                        paths.append(pair + next_path)
-
-            return paths
-
-        def possible_rounds():
-            rounds = []
-            for c in TRADING_CURRENCIES:
-                for p in possible_paths(c):
-                    if p[-1] == c:
-                        rounds.append(p)
-            return rounds
-
+        self.statistix_pairs = {curr1 + curr2: Statistix(currency=curr1, main_currency=curr2, add_order_book=True) for curr1, curr2 in TRADING_PAIRS}
         self.possible_rounds = possible_rounds()
+        self.evaluate_rounds = self.evaluate_rounds()
         pass
+
+    def average_sell_price(self, currency1, currency2):
+        if (currency1, currency2) in TRADING_PAIRS:
+            statistix = self.statistix_pairs[currency1 + currency2]
+            statistix.update()
+            price = statistix.order_book.avg_sell_price
+
+        elif (currency2, currency1) in TRADING_PAIRS:
+            statistix = self.statistix_pairs[currency2 + currency1]
+            statistix.update()
+            reverse_price = statistix.order_book.avg_buy_price
+            if reverse_price != 0:
+                price = 1 / reverse_price
+            else:
+                price = 0
+        else:
+            raise BinanceAPIException('wrong symbol')
+
+        return price
+
+    def evaluate_rounds(self):
+        evaluated_rounds = []
+
+        for round in self.possible_rounds:
+            path = list(round)
+            multiplicator = 1
+            while len(path) > 0:
+                pair = path[::2]
+                path = path[2::]
+                multiplicator = multiplicator * self.average_sell_price(pair[0], pair[1])
+
+            evaluated_rounds.append[(multiplicator, round)]
+
+        return sorted(evaluated_rounds, reverse=True)
 
 
     def main(self):

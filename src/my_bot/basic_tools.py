@@ -102,12 +102,46 @@ def get_order_book_statistics(pair):
 
     total_bid = sum([Decimal(bid[1]) for bid in _bids])
     total_ask = sum([Decimal(ask[1]) for ask in _asks])
-    avg_buy_price = sum([Decimal(bid[0]) * Decimal(bid[1]) for bid in _bids]) / total_bid
-    avg_sell_price = sum([Decimal(ask[0]) * Decimal(ask[1]) for ask in _asks]) / total_ask
-    avg_price_difference = avg_sell_price - avg_buy_price
-    max_sell_price = max([Decimal(ask[0]) for ask in _asks])
-    min_buy_price = min([Decimal(bid[0]) for bid in _bids])
-    max_price_difference = max_sell_price - min_buy_price
+
+    if total_bid > 0:
+        avg_buy_price = sum([Decimal(bid[0]) * Decimal(bid[1]) for bid in _bids]) / total_bid
+    else:
+        avg_buy_price = None
+
+    if total_ask > 0:
+        avg_sell_price = sum([Decimal(ask[0]) * Decimal(ask[1]) for ask in _asks]) / total_ask
+    else:
+        avg_sell_price = None
+
+    try:
+        avg_price_difference = avg_sell_price - avg_buy_price
+    except TypeError:
+        avg_price_difference = None
+
+    try:
+        min_sell_price = min([Decimal(ask[0]) for ask in _asks])
+    except ValueError:
+        min_sell_price = None
+
+    try:
+        max_sell_price = max([Decimal(ask[0]) for ask in _asks])
+    except ValueError:
+        max_sell_price = None
+
+    try:
+        min_buy_price = min([Decimal(bid[0]) for bid in _bids])
+    except ValueError:
+        min_buy_price = None
+
+    try:
+        max_buy_price = max([Decimal(bid[0]) for bid in _bids])
+    except ValueError:
+        max_buy_price = None
+
+    try:
+        max_price_difference = max_sell_price - min_buy_price
+    except TypeError:
+        max_price_difference = None
 
 
 
@@ -116,9 +150,9 @@ def get_order_book_statistics(pair):
         _asks = _asks,
         total_bid=total_bid,
         avg_buy_price=avg_buy_price,
-        min_sell_price=min([Decimal(ask[0]) for ask in _asks]),
+        min_sell_price=min_sell_price,
         max_sell_price=max_sell_price,
-        max_buy_price=max([Decimal(bid[0]) for bid in _bids]),
+        max_buy_price=max_buy_price,
         min_buy_price=min_buy_price,
         total_ask=total_ask,
         avg_sell_price=avg_sell_price,
@@ -191,3 +225,30 @@ class Configuration:
 
 
 CONFIGURATION = Configuration()
+
+TRADING_CURRENCIES = get_trading_currencies()
+TRADING_PAIRS = get_trading_pairs()
+PAIR_SYMBOLS = [pair[0] + pair[1] for pair in TRADING_PAIRS]
+DIRECTIONAL_PAIRS = [pair for pair in TRADING_PAIRS] + [(pair[1], pair[0]) for pair in TRADING_PAIRS]
+
+
+def possible_paths(currency, max_depth=3):
+    paths = []
+    if max_depth > 0:
+        matching_pairs = [pair for pair in DIRECTIONAL_PAIRS if pair[0] == currency]
+        for pair in matching_pairs:
+            paths.append(pair)
+            for next_path in possible_paths(pair[1], max_depth=max_depth - 1):
+                paths.append(pair + next_path)
+
+    return paths
+
+
+def possible_rounds():
+    rounds = []
+    for c in TRADING_CURRENCIES:
+        for p in possible_paths(c):
+            if p[-1] == c:
+                rounds.append(p)
+    return rounds
+
