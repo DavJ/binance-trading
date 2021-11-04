@@ -74,7 +74,7 @@ class Application:
             path = list(round)
             multiplicator = 1
             while len(path) > 0:
-                pair = path[::2]
+                pair = path[:2]
                 path = path[2::]
                 multiplicator = multiplicator * self.average_sell_price(pair[0], pair[1])
 
