@@ -15,6 +15,9 @@ from binance.exceptions import BinanceAPIException
 
 from src.my_bot.model.statistix import Statistix
 
+BUY_FEE = Decimal(CONFIGURATION.BUY_FEE)
+SELL_FEE = Decimal(CONFIGURATION.SELL_FEE)
+
 
 class Application:
 
@@ -44,7 +47,7 @@ class Application:
         #                  pass
 
         self.statistix_pairs = {curr1 + curr2: Statistix(currency=curr1, main_currency=curr2, add_order_book=True) for curr1, curr2 in TRADING_PAIRS}
-        self.possible_rounds = possible_rounds()
+        self.possible_rounds = possible_rounds(max_depth=2)
         self.evaluate_rounds = self.evaluate_rounds()
         pass
 
@@ -52,14 +55,14 @@ class Application:
         if (currency1, currency2) in TRADING_PAIRS:
             statistix = self.statistix_pairs[currency1 + currency2]
             statistix.update()
-            price = statistix.order_book.max_buy_price
+            price = statistix.order_book.min_sell_price * (1 - SELL_FEE)
 
         elif (currency2, currency1) in TRADING_PAIRS:
             statistix = self.statistix_pairs[currency2 + currency1]
             statistix.update()
-            reverse_price = statistix.order_book.min_sell_price
+            reverse_price = statistix.order_book.max_buy_price
             if reverse_price != 0:
-                price = 1 / reverse_price
+                price = (1 / reverse_price) * (1 - BUY_FEE)
             else:
                 price = 0
         else:
@@ -81,7 +84,7 @@ class Application:
                 except TypeError:
                     multiplicator = None
 
-            if multiplicator > 1:
+            if multiplicator is not None and multiplicator > 1:
                 evaluated_rounds.append((multiplicator, round))
 
         return sorted(evaluated_rounds, reverse=True)

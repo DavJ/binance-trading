@@ -252,10 +252,10 @@ def possible_paths(currency, max_depth=3):
     return paths
 
 
-def possible_rounds():
+def possible_rounds(max_depth=3):
     rounds = []
     for c in TRADING_CURRENCIES:
-        for p in possible_paths(c):
+        for p in possible_paths(c, max_depth=max_depth):
             if p[-1] == c:
                 rounds.append(p)
     return rounds
