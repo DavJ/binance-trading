@@ -69,19 +69,24 @@ class Application:
 
         #BUY algorithm
         for order_book in sorted_order_books:
-            if self.user_ticker.assets[self.main_currency].asset_amount_free <= self.minimal_main_currency_balance:
+
+            trade_currency = order_book.trade_currency
+            if (trade_currency == self.main_currency and self.user_ticker.assets[self.trade_currency].asset_amount_free
+                    <= self.minimal_main_currency_balance):
                 break
-            buy_amount_in_main_currency = (self.user_ticker.assets[self.main_currency].asset_amount_free - self.minimal_main_currency_balance)
+
+
             max_asset_amount_allowed_in_main_currency = total_asset_amount_in_main_currency * Decimal(CONFIGURATION.MAX_ASSET_FRACTION)
-            allowed_buy_amount_in_main_currency = max(0, buy_amount_in_main_currency - max_asset_amount_allowed_in_main_currency)
+            allowed_buy_amount_in_trade_currency = max(0, buy_amount_in_trade_currency - max_asset_amount_allowed_in_main_currency)
 
             asset = self.user_ticker.assets[order_book.currency]
             limit_price = order_book.strategical_buying_price
 
-            if ((allowed_buy_amount_in_main_currency > 0)
+            if ((allowed_buy_amount_in_trade_currency > 0)
                     and asset.statistix.average_price > limit_price
                     and self.max_growth_predicted(asset.currency) >= 0):
-                buy_amount = max(0, allowed_buy_amount_in_main_currency / order_book.avg_buy_price - asset.asset_amount_total)
+                buy_amount = max(0, allowed_buy_amount_in_trade_currency / order_book.avg_buy_price
+                                 - asset.asset_amount_total)
                 trade_currency = order_book.trade_currency
                 if not CONFIGURATION.PLACE_BUY_ORDER_ONLY_IF_PRICE_MATCHES or order_book.min_buy_price <= limit_price:
                     self.active_orders.append(
