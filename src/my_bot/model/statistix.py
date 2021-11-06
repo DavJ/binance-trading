@@ -16,9 +16,9 @@ from src.my_bot.model.order_book import OrderBook
 
 class Statistix:
 
-    def __init__(self, currency=None, main_currency='BNB', add_tickers=False, add_order_book=False):
+    def __init__(self, currency=None, trade_currency=CONFIGURATION.MAIN_CURRENCY, add_tickers=False, add_order_book=False):
         self.currency = currency
-        self.main_currency = main_currency
+        self.trade_currency = trade_currency
         self.average_price = None
         self.max_price = None
         self.min_price = None
@@ -26,12 +26,12 @@ class Statistix:
         self.daily_changer = None
 
         if add_tickers:
-           self.pair_ticker = Ticker(currency, main_currency)
+           self.pair_ticker = Ticker(currency, trade_currency)
         else:
            self.pair_ticker = None
 
         if add_order_book:
-           self.order_book = OrderBook(currency, main_currency)
+           self.order_book = OrderBook(currency, trade_currency)
         else:
            self.order_book = None
 
@@ -41,7 +41,7 @@ class Statistix:
         self.update()
 
     def __repr__(self):
-        return f"Statistix(currency={self.currency}, main_currency={self.main_currency})"
+        return f"Statistix(currency={self.currency}, trade_currency={self.trade_currency})"
 
     def update(self):
         client = get_binance_client()
@@ -74,7 +74,7 @@ class Statistix:
 
     @property
     def pair(self):
-        return self.currency + self.main_currency
+        return self.currency + self.trade_currency
 
     @property
     def daily_changer_eligible_for_buy(self):

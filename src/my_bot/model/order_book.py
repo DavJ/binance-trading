@@ -16,10 +16,10 @@ from src.my_bot.model.chart import Chart
 
 class OrderBook:
     #ticker https://python-binance.readthedocs.io/en/latest/websockets.html
-    def __init__(self, currency=None, main_currency=CONFIGURATION.MAIN_CURRENCY):
+    def __init__(self, currency=None, trade_currency=CONFIGURATION.MAIN_CURRENCY):
         self.currency = currency
-        self.asset_currency = main_currency
-        self.pair = currency + main_currency
+        self.asset_currency = trade_currency
+        self.pair = currency + trade_currency
         self.time = None
         self._bids = None
         self._asks = None

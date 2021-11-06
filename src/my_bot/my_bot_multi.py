@@ -83,9 +83,10 @@ class Application:
                     and asset.statistix.average_price > limit_price
                     and self.max_growth_predicted(asset.currency) >= 0):
                 buy_amount = max(0, allowed_buy_amount_in_main_currency / order_book.avg_buy_price - asset.asset_amount_total)
+                trade_currency = order_book.trade_currency
                 if not CONFIGURATION.PLACE_BUY_ORDER_ONLY_IF_PRICE_MATCHES or order_book.min_buy_price <= limit_price:
                     self.active_orders.append(
-                        Order(side='BUY', currency=asset.currency, amount=buy_amount, limit_price=limit_price))
+                        Order(side='BUY', currency=asset.currency, amount=buy_amount, limit_price=limit_price, trade_currency=trade_currency))
 
         #SELL algorithm
         for order_book in self.order_books.values():
@@ -93,7 +94,8 @@ class Application:
             max_sell_amount = asset.asset_amount_free
             limit_price = order_book.strategical_selling_price
             if (max_sell_amount > 0): #and asset.statistix.eligible_for_sell():
-                   self.active_orders.append(Order(side='SELL', currency=asset.currency, amount=max_sell_amount, limit_price=limit_price))
+                   trade_currency = order_book.trade_currency
+                   self.active_orders.append(Order(side='SELL', currency=asset.currency, amount=max_sell_amount, limit_price=limit_price, trade_currency=trade_currency))
 
         print(f'trading iteration finished  at {datetime.now().isoformat()}\n\n')
 
