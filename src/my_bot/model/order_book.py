@@ -62,17 +62,16 @@ class OrderBook:
 
     @property
     def strategical_buying_price(self):
-        buy_strategy = max(0, Decimal(CONFIGURATION.BUY_STRATEGY))  # must be >=0 increase for max profit
-        #return buy_strategy * self.min_buy_price + (1-buy_strategy) * self.max_buy_price
-        if buy_strategy==0:
-            bs=0
+        buy_strategy = Decimal(CONFIGURATION.BUY_STRATEGY)  # must be >=0 increase for max profit
+        if buy_strategy == 0:
+            bs = 1
         else:
-            bs=1/buy_strategy
+            bs = min(1, 1/buy_strategy)
 
-        return abs(bs) * self.avg_buy_price + max(0, (1-bs)) * self.avg_market_price
+        return bs * min(self.avg_current_price, self.max_buy_price)
 
     @property
     def strategical_selling_price(self):
-        sell_strategy = max(0, Decimal(CONFIGURATION.SELL_STRATEGY))  # must be >=0 increase for max profit
-        #return sell_strategy * self.max_sell_price + (1 - sell_strategy) * self.min_sell_price
-        return abs(sell_strategy) * self.avg_sell_price + max(0, (1 - sell_strategy)) * self.avg_market_price
+        sell_strategy = Decimal(CONFIGURATION.SELL_STRATEGY)  # must be >=0 increase for max profit
+        ss = max(1, sell_strategy)
+        return ss * max(self.avg_current_price, self.min_sell_price)
