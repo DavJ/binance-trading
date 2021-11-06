@@ -25,7 +25,7 @@ class Application:
         self.active_orders = []
         self.profit = Profit()
 
-        self.order_books = {curr1 + curr2: Statistix(currency=curr1, main_currency=curr2, add_order_book=True)
+        self.order_books = {curr1 + curr2: Statistix(currency=curr1, trade_currency=curr2, add_order_book=True)
                             for curr1, curr2 in TRADING_PAIRS}
 
     def main(self):
