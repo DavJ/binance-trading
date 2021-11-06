@@ -1,10 +1,11 @@
 import asyncio
 from decimal import Decimal
-from basic_tools import get_binance_client, CONFIGURATION, get_trading_currencies, round_down
+from basic_tools import get_binance_client, CONFIGURATION, get_trading_currencies, round_down, TRADING_PAIRS
 from model.asset import Asset
 from model.ticker import Ticker
 from model.order_book import OrderBook
 from model.user_ticker import UserTicker
+from src.my_bot.model.statistix import Statistix
 from model.order import Order
 from model.profit import Profit
 from time import sleep
@@ -24,9 +25,8 @@ class Application:
         self.active_orders = []
         self.profit = Profit()
 
-        for currency in get_trading_currencies():
-            self.symbol_tickers.update(**{currency: Ticker(currency)})
-            self.order_books.update(**{currency: OrderBook(currency)})
+        self.order_books = {curr1 + curr2: Statistix(currency=curr1, main_currency=curr2, add_order_book=True)
+                            for curr1, curr2 in TRADING_PAIRS}
 
     def main(self):
         while True:
