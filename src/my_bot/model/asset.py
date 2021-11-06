@@ -25,7 +25,7 @@ class Asset:
         self._time = None
         self._id = None
         if self.currency != self.main_currency:
-            self.statistix = Statistix(currency=self.currency, main_currency=self.main_currency)
+            self.statistix = Statistix(currency=self.currency, trade_currency=self.main_currency)
         else:
             self.statistix = None
 
