@@ -18,7 +18,7 @@ class OrderBook:
     #ticker https://python-binance.readthedocs.io/en/latest/websockets.html
     def __init__(self, currency=None, trade_currency=CONFIGURATION.MAIN_CURRENCY):
         self.currency = currency
-        self.asset_currency = trade_currency
+        self.trade_currency = trade_currency
         self.pair = currency + trade_currency
         self.time = None
         self._bids = None
@@ -40,7 +40,7 @@ class OrderBook:
         self.update()
 
     def __repr__(self):
-        return f"OrderBook(currency='{self.currency}, asset_currency={self.asset_currency})"
+        return f"OrderBook(currency='{self.currency}, asset_currency={self.trade_currency})"
 
     def update(self):
         statistics = get_order_book_statistics(self.pair)

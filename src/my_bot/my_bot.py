@@ -60,7 +60,7 @@ class Application:
             return 0
 
     def trade(self):
-        sorted_order_books = sorted(self.order_books.values(), key=lambda x: x.avg_price_relative_difference, reverse=True)
+        sorted_order_books = sorted(self.order_books.values(), key=lambda x: x.avg_price_relative_difference, reverse=False)
 
         #might change slightly during algorithm due to async refresh of assets, but approximate value is OK
         total_asset_amount_in_main_currency = sum([self.user_ticker.assets[key].asset_amount_in_main_currency_market
