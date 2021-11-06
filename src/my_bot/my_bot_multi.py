@@ -5,7 +5,6 @@ from model.asset import Asset
 from model.ticker import Ticker
 from model.order_book import OrderBook
 from model.user_ticker import UserTicker
-from src.my_bot.model.statistix import Statistix
 from model.order import Order
 from model.profit import Profit
 from time import sleep
@@ -25,7 +24,7 @@ class Application:
         self.active_orders = []
         self.profit = Profit()
 
-        self.order_books = {curr1 + curr2: Statistix(currency=curr1, trade_currency=curr2, add_order_book=True)
+        self.order_books = {curr1 + curr2: OrderBook(currency=curr1, trade_currency=curr2)
                             for curr1, curr2 in TRADING_PAIRS}
 
     def main(self):
