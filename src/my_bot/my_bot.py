@@ -80,6 +80,7 @@ class Application:
             limit_price = order_book.strategical_buying_price
 
             if ((allowed_buy_amount_in_main_currency > 0)
+                    and asset.statistix is not None
                     and asset.statistix.average_price > limit_price
                     and self.max_growth_predicted(asset.currency) >= 0):
                 buy_amount = max(0, allowed_buy_amount_in_main_currency / order_book.avg_buy_price - asset.asset_amount_total)

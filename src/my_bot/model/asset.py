@@ -9,7 +9,8 @@ from src.my_bot.model.statistix import Statistix
 
 
 from src.my_bot.basic_tools import (CONFIGURATION, get_binance_client, get_async_binance_client,
-                                    ilen, get_order_book_statistics)
+                                    ilen, get_order_book_statistics, TRADING_PAIRS)
+
 
 
 class Asset:
@@ -24,7 +25,7 @@ class Asset:
         self.recent_average_sell_price = None
         self._time = None
         self._id = None
-        if self.currency != self.main_currency:
+        if self.currency + self.main_currency in TRADING_PAIRS:
             self.statistix = Statistix(currency=self.currency, trade_currency=self.main_currency)
         else:
             self.statistix = None
