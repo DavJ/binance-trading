@@ -27,6 +27,9 @@ class Application:
         self.order_books = {curr1 + curr2: OrderBook(currency=curr1, trade_currency=curr2)
                             for curr1, curr2 in TRADING_PAIRS}
 
+        self.statistixes = {curr1 + curr2: Statistix(currency=curr1, trade_currency=curr2)
+                            for curr1, curr2 in TRADING_PAIRS}
+
     def main(self):
         while True:
             for _, order_book in self.order_books.items():
@@ -76,14 +79,20 @@ class Application:
         #mutual algorithm
         for order_book in sorted_order_books:
 
+            currency = order_book.currency
+            trade_currency = order_book.trade_currency
+
+            statistix = self.statistixes[currency + trade_currency]
+
+            statistix.update()
+            order_book.update()
+
             asset = self.user_ticker.assets[order_book.currency]
             trade_asset = self.user_ticker.assets[order_book.trade_currency]
-            trade_currency = order_book.trade_currency
 
             buy_limit_price = order_book.strategical_buying_price
             if (asset.asset_amount_free > 0
-                and asset.statistix is not None
-                and asset.statistix.average_price > buy_limit_price
+                and statistix.average_price > buy_limit_price
                 and self.max_growth_predicted(asset.currency) >= 0):
                     buy_amount = max(0, asset.asset_amount_free*Decimal(CONFIGURATION.MAX_ASSET_FRACTION))
                     if not CONFIGURATION.PLACE_BUY_ORDER_ONLY_IF_PRICE_MATCHES:
@@ -94,8 +103,7 @@ class Application:
 
             sell_limit_price = order_book.strategical_selling_price
             if (trade_asset.asset_amount_free > 0
-                and asset.statistix is not None
-                and asset.statistix.average_price < sell_limit_price
+                and statistix.average_price < sell_limit_price
                 and self.min_drop_predicted(trade_asset.currency) <= 0):
                    sell_amount = max(0, trade_asset.asset_amount_free * Decimal(CONFIGURATION.MAX_ASSET_FRACTION))
                    self.active_orders.append(Order(side='SELL', currency=asset.currency, amount=sell_amount,
