@@ -4,8 +4,9 @@ from basic_tools import get_binance_client, CONFIGURATION, get_trading_currencie
 from model.asset import Asset
 from model.ticker import Ticker
 from model.order_book import OrderBook
+from model.statistix import Statistix
 from model.user_ticker import UserTicker
-from model.order import Order
+from model.order i  mport Order
 from model.profit import Profit
 from time import sleep
 from datetime import datetime
