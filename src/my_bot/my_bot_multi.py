@@ -98,8 +98,8 @@ class Application:
 
             statistix = self.statistixes[currency + trade_currency]
 
-            asset = self.user_ticker.assets[order_book.currency]
-            trade_asset = self.user_ticker.assets[order_book.trade_currency]
+            asset = self.assets[order_book.currency]
+            trade_asset = self.assets[order_book.trade_currency]
 
             buy_limit_price = order_book.strategical_buying_price
             if (asset.asset_amount_free > 0
