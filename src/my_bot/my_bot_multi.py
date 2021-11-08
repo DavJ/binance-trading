@@ -84,7 +84,7 @@ class Application:
     def trade(self):
 
         def update_assets(assets):
-            for asset in assets():
+            for asset in assets:
                 asset.get_balance()
                 asset.update_last_trades()
 
