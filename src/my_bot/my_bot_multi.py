@@ -1,6 +1,7 @@
 import asyncio
 from decimal import Decimal
-from basic_tools import get_binance_client, CONFIGURATION, get_trading_currencies, round_down, TRADING_PAIRS
+from basic_tools import (get_binance_client, CONFIGURATION, get_trading_currencies,
+                         round_down, TRADING_PAIRS, TRADING_CURRENCIES)
 from model.asset import Asset
 from model.ticker import Ticker
 from model.order_book import OrderBook
@@ -23,7 +24,10 @@ class Application:
         self.active_orders = []
         self.profit = Profit()
 
-        self.symbol_tickers = {}
+        #self.symbol_tickers = {}
+
+        self.assets = {currency: Asset(currency=currency) for currency in TRADING_CURRENCIES}
+
         self.order_books = {curr1 + curr2: OrderBook(currency=curr1, trade_currency=curr2)
                             for curr1, curr2 in TRADING_PAIRS}
 
@@ -32,12 +36,21 @@ class Application:
 
     def main(self):
         while True:
-            for _, order_book in self.order_books.items():
-                order_book.update()
+            self.update()
             self.trade()
+
             loop = asyncio.get_event_loop()
             loop.run_until_complete(asyncio.sleep(int(CONFIGURATION.SLEEP)))
-            #sleep(int(CONFIGURATION.SLEEP))
+
+    def update(self):
+        for asset in self.assets:
+            self.update()
+
+        for _, order_book in self.order_books.items():
+            order_book.update()
+
+        for statistix in self.statistixes:
+            statistix.update()
 
     def price_prediction(self, currency):
         """
@@ -71,8 +84,8 @@ class Application:
         sorted_order_books = sorted(self.order_books.values(), key=lambda x: x.avg_price_relative_difference, reverse=False)
 
         #might change slightly during algorithm due to async refresh of assets, but approximate value is OK
-        total_asset_amount_in_main_currency = sum([self.user_ticker.assets[key].asset_amount_in_main_currency_market
-                                                   for key in self.user_ticker.assets])
+        total_asset_amount_in_main_currency = sum([self.assets[key].asset_amount_in_main_currency_market
+                                                   for key in self.assets])
 
         print(f'\n\nCurrently having approximately {total_asset_amount_in_main_currency} {CONFIGURATION.MAIN_CURRENCY} in total.\n\n')
 
@@ -83,9 +96,6 @@ class Application:
             trade_currency = order_book.trade_currency
 
             statistix = self.statistixes[currency + trade_currency]
-
-            statistix.update()
-            order_book.update()
 
             asset = self.user_ticker.assets[order_book.currency]
             trade_asset = self.user_ticker.assets[order_book.trade_currency]
