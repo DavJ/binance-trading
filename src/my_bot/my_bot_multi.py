@@ -44,7 +44,7 @@ class Application:
 
     def update(self):
         for asset in self.assets:
-            self.update()
+            asset.update()
 
         for _, order_book in self.order_books.items():
             order_book.update()
