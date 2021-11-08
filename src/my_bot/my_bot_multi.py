@@ -58,6 +58,12 @@ class Application:
         except AttributeError:
             return 0
 
+    def min_drop_predicted(self, currency):
+        try:
+            return min((move for _, move in self.price_move_prediction(currency).items()))
+        except AttributeError:
+            return 0
+
     def trade(self):
         sorted_order_books = sorted(self.order_books.values(), key=lambda x: x.avg_price_relative_difference, reverse=False)
 
@@ -67,39 +73,33 @@ class Application:
 
         print(f'\n\nCurrently having approximately {total_asset_amount_in_main_currency} {CONFIGURATION.MAIN_CURRENCY} in total.\n\n')
 
-        #BUY algorithm
+        #mutual algorithm
         for order_book in sorted_order_books:
 
+            asset = self.user_ticker.assets[order_book.currency]
+            trade_asset = self.user_ticker.assets[order_book.trade_currency]
             trade_currency = order_book.trade_currency
-            if (trade_currency == self.main_currency and self.user_ticker.assets[self.trade_currency].asset_amount_free
-                    <= self.minimal_main_currency_balance):
-                break
+
+            buy_limit_price = order_book.strategical_buying_price
+            if (asset.asset_amount_free > 0
+                and asset.statistix is not None
+                and asset.statistix.average_price > buy_limit_price
+                and self.max_growth_predicted(asset.currency) >= 0):
+                    buy_amount = max(0, asset.asset_amount_free*Decimal(CONFIGURATION.MAX_ASSET_FRACTION))
+                    if not CONFIGURATION.PLACE_BUY_ORDER_ONLY_IF_PRICE_MATCHES:
+                        self.active_orders.append(
+                            Order(side='BUY', currency=asset.currency, amount=buy_amount, limit_price=buy_limit_price,
+                                  trade_currency=trade_currency))
 
 
-            max_asset_amount_allowed_in_main_currency = total_asset_amount_in_main_currency * Decimal(CONFIGURATION.MAX_ASSET_FRACTION)
-            allowed_buy_amount_in_trade_currency = max(0, buy_amount_in_trade_currency - max_asset_amount_allowed_in_main_currency)
-
-            asset = self.user_ticker.assets[order_book.currency]
-            limit_price = order_book.strategical_buying_price
-
-            if ((allowed_buy_amount_in_trade_currency > 0)
-                    and asset.statistix.average_price > limit_price
-                    and self.max_growth_predicted(asset.currency) >= 0):
-                buy_amount = max(0, allowed_buy_amount_in_trade_currency / order_book.avg_buy_price
-                                 - asset.asset_amount_total)
-                trade_currency = order_book.trade_currency
-                if not CONFIGURATION.PLACE_BUY_ORDER_ONLY_IF_PRICE_MATCHES or order_book.min_buy_price <= limit_price:
-                    self.active_orders.append(
-                        Order(side='BUY', currency=asset.currency, amount=buy_amount, limit_price=limit_price, trade_currency=trade_currency))
-
-        #SELL algorithm
-        for order_book in self.order_books.values():
-            asset = self.user_ticker.assets[order_book.currency]
-            max_sell_amount = asset.asset_amount_free
-            limit_price = order_book.strategical_selling_price
-            if (max_sell_amount > 0): #and asset.statistix.eligible_for_sell():
-                   trade_currency = order_book.trade_currency
-                   self.active_orders.append(Order(side='SELL', currency=asset.currency, amount=max_sell_amount, limit_price=limit_price, trade_currency=trade_currency))
+            sell_limit_price = order_book.strategical_selling_price
+            if (trade_asset.asset_amount_free > 0
+                and asset.statistix is not None
+                and asset.statistix.average_price < sell_limit_price
+                and self.min_drop_predicted(trade_asset.currency) <= 0):
+                   sell_amount = max(0, trade_asset.asset_amount_free * Decimal(CONFIGURATION.MAX_ASSET_FRACTION))
+                   self.active_orders.append(Order(side='SELL', currency=asset.currency, amount=sell_amount,
+                                                   limit_price=sell_limit_price, trade_currency=trade_currency))
 
         print(f'trading iteration finished  at {datetime.now().isoformat()}\n\n')
 
