@@ -103,20 +103,20 @@ class Application:
             trade_asset = self.assets[order_book.trade_currency]
 
             buy_limit_price = order_book.strategical_buying_price
-            if (asset.asset_amount_free > 0
+            if (trade_asset.asset_amount_free > 0
                 and statistix.average_price > buy_limit_price
-                and self.max_growth_predicted(asset.currency) >= 0):
-                    buy_amount = max(0, asset.asset_amount_free*Decimal(CONFIGURATION.MAX_ASSET_FRACTION))
+                and self.max_growth_predicted(currency) >= 0):
+                    buy_amount = max(0, trade_asset.asset_amount_free*Decimal(CONFIGURATION.MAX_ASSET_FRACTION))
                     if not CONFIGURATION.PLACE_BUY_ORDER_ONLY_IF_PRICE_MATCHES:
                         self.active_orders.append(
                             Order(side='BUY', currency=asset.currency, amount=buy_amount, limit_price=buy_limit_price,
                                   trade_currency=trade_currency))
 
             sell_limit_price = order_book.strategical_selling_price
-            if (trade_asset.asset_amount_free > 0
+            if (asset.asset_amount_free > 0
                 and statistix.average_price < sell_limit_price
-                and self.min_drop_predicted(trade_asset.currency) <= 0):
-                   sell_amount = max(0, trade_asset.asset_amount_free * Decimal(CONFIGURATION.MAX_ASSET_FRACTION))
+                and self.min_drop_predicted(asset.currency) <= 0):
+                   sell_amount = max(0, asset.asset_amount_free * Decimal(CONFIGURATION.MAX_ASSET_FRACTION))
                    self.active_orders.append(Order(side='SELL', currency=asset.currency, amount=sell_amount,
                                                    limit_price=sell_limit_price, trade_currency=trade_currency))
 
