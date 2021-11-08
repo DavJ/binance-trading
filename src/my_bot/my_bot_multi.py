@@ -6,7 +6,7 @@ from model.ticker import Ticker
 from model.order_book import OrderBook
 from model.statistix import Statistix
 from model.user_ticker import UserTicker
-from model.order i  mport Order
+from model.order import Order
 from model.profit import Profit
 from time import sleep
 from datetime import datetime
@@ -15,9 +15,7 @@ import math
 class Application:
 
     def __init__(self):
-        self.user_ticker = UserTicker()
-        self.symbol_tickers = {}
-        self.order_books = {}
+
         self.main_currency = CONFIGURATION.MAIN_CURRENCY
         self.minimal_main_currency_balance = Decimal(CONFIGURATION.MINIMAL_MAIN_CURRENCY_BALANCE)
         self.buy_fee = Decimal(CONFIGURATION.BUY_FEE)
@@ -25,6 +23,7 @@ class Application:
         self.active_orders = []
         self.profit = Profit()
 
+        self.symbol_tickers = {}
         self.order_books = {curr1 + curr2: OrderBook(currency=curr1, trade_currency=curr2)
                             for curr1, curr2 in TRADING_PAIRS}
 
