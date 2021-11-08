@@ -84,7 +84,7 @@ class Application:
     def trade(self):
 
         def update_assets(assets):
-            for asset in assets.items():
+            for asset in assets():
                 asset.get_balance()
                 asset.update_last_trades()
 
@@ -127,6 +127,10 @@ class Application:
                    update_assets([asset, trade_asset])
 
         print(f'trading iteration finished  at {datetime.now().isoformat()}\n\n')
+
+    def cancel_old_orders(self):
+        pass
+
 
 if __name__ == "__main__":
     application = Application()
