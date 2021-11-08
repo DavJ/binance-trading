@@ -82,11 +82,12 @@ class Application:
             return 0
 
     def trade(self):
+
         sorted_order_books = sorted(self.order_books.values(), key=lambda x: x.avg_price_relative_difference, reverse=False)
 
         #might change slightly during algorithm due to async refresh of assets, but approximate value is OK
-        total_asset_amount_in_main_currency = sum([self.assets[key].asset_amount_in_main_currency_market
-                                                   for key in self.assets])
+        total_asset_amount_in_main_currency = sum([asset.asset_amount_in_main_currency_market
+                                                   for currency, asset in self.assets.items()])
 
         print(f'\n\nCurrently having approximately {total_asset_amount_in_main_currency} {CONFIGURATION.MAIN_CURRENCY} in total.\n\n')
 
@@ -110,7 +111,6 @@ class Application:
                         self.active_orders.append(
                             Order(side='BUY', currency=asset.currency, amount=buy_amount, limit_price=buy_limit_price,
                                   trade_currency=trade_currency))
-
 
             sell_limit_price = order_book.strategical_selling_price
             if (trade_asset.asset_amount_free > 0
