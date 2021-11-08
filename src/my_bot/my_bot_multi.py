@@ -83,6 +83,11 @@ class Application:
 
     def trade(self):
 
+        def update_assets(assets):
+            for _, asset in assets.items():
+                asset.get_balance()
+                asset.update_last_trades()
+
         sorted_order_books = sorted(self.order_books.values(), key=lambda x: x.avg_price_relative_difference, reverse=False)
 
         #might change slightly during algorithm due to async refresh of assets, but approximate value is OK
@@ -93,7 +98,6 @@ class Application:
 
         #mutual algorithm
         for order_book in sorted_order_books:
-
             currency = order_book.currency
             trade_currency = order_book.trade_currency
 
@@ -106,11 +110,11 @@ class Application:
             if (trade_asset.asset_amount_free > 0
                 and statistix.average_price > buy_limit_price
                 and self.max_growth_predicted(currency) >= 0):
-                    buy_amount = max(0, trade_asset.asset_amount_free*Decimal(CONFIGURATION.MAX_ASSET_FRACTION))
-                    if not CONFIGURATION.PLACE_BUY_ORDER_ONLY_IF_PRICE_MATCHES:
-                        self.active_orders.append(
-                            Order(side='BUY', currency=asset.currency, amount=buy_amount, limit_price=buy_limit_price,
-                                  trade_currency=trade_currency))
+                    buy_amount = max(0, trade_asset.asset_amount_free*Decimal(CONFIGURATION.MAX_ASSET_FRACTION) / buy_limit_price)
+                    self.active_orders.append(Order(side='BUY', currency=asset.currency, amount=buy_amount,
+                                                    limit_price=buy_limit_price, trade_currency=trade_currency))
+
+                    update_assets([asset, trade_asset])
 
             sell_limit_price = order_book.strategical_selling_price
             if (asset.asset_amount_free > 0
@@ -119,6 +123,8 @@ class Application:
                    sell_amount = max(0, asset.asset_amount_free * Decimal(CONFIGURATION.MAX_ASSET_FRACTION))
                    self.active_orders.append(Order(side='SELL', currency=asset.currency, amount=sell_amount,
                                                    limit_price=sell_limit_price, trade_currency=trade_currency))
+
+                   update_assets([asset, trade_asset])
 
         print(f'trading iteration finished  at {datetime.now().isoformat()}\n\n')
 
