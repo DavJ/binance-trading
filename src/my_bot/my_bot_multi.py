@@ -43,13 +43,13 @@ class Application:
             loop.run_until_complete(asyncio.sleep(int(CONFIGURATION.SLEEP)))
 
     def update(self):
-        for asset in self.assets:
+        for _, asset in self.assets.items():
             asset.update()
 
         for _, order_book in self.order_books.items():
             order_book.update()
 
-        for statistix in self.statistixes:
+        for _, statistix in self.statistixes.items():
             statistix.update()
 
     def price_prediction(self, currency):
