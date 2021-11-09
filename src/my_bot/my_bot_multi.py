@@ -88,7 +88,9 @@ class Application:
                 asset.get_balance()
                 asset.update_last_trades()
 
-        sorted_order_books = sorted(self.order_books.values(), key=lambda x: x.avg_price_relative_difference, reverse=False)
+        pre_sorted_order_books = [order_book for order_book in self.order_books if order_book.avg_price_relative_difference is not None]
+
+        sorted_order_books = sorted(self.pre_sorted_order_books.values(), key=lambda x: x.avg_price_relative_difference, reverse=False)
 
         #might change slightly during algorithm due to async refresh of assets, but approximate value is OK
         total_asset_amount_in_main_currency = sum([asset.asset_amount_in_main_currency_market
