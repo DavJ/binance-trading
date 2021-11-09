@@ -20,7 +20,7 @@ class Configuration:
                           'BUY_FEE', 'SELL_FEE', 'BUY_PROFIT', 'SELL_PROFIT', 'BUY_STRATEGY', 'SELL_STRATEGY',
                           'DB_FILE', 'USE_ASYNC_CLIENT', 'MAX_ASSET_FRACTION', 'SLEEP',
                           'BUY_DAILY_CHANGER', 'SELL_DAILY_CHANGER', 'SELL_IMMEDIATELY',
-                          'PLACE_BUY_ORDER_ONLY_IF_PRICE_MATCHES', 'ORDER_VALIDITY']:
+                          'PLACE_BUY_ORDER_ONLY_IF_PRICE_MATCHES', 'ORDER_VALIDITY', 'VOLATILITY_COEFICIENT']:
             setattr(self, attribute, config(attribute))
 
 
@@ -164,6 +164,11 @@ def get_order_book_statistics(pair):
         max_price_difference = None
 
     try:
+        min_price_difference = min_sell_price - max_buy_price
+    except TypeError:
+        min_price_difference = None
+
+    try:
         avg_price_relative_difference = 2 * avg_price_difference / (avg_sell_price + avg_buy_price)
     except TypeError:
         avg_price_relative_difference = None
@@ -172,6 +177,12 @@ def get_order_book_statistics(pair):
         max_price_relative_difference = 2 * max_price_difference / (max_sell_price + min_buy_price)
     except TypeError:
         max_price_relative_difference = None
+
+    try:
+        min_price_relative_difference = 2 * min_price_difference / (min_sell_price + max_buy_price)
+    except TypeError:
+        min_price_relative_difference = None
+
 
     return dict(
         _bids=_bids,
@@ -188,6 +199,8 @@ def get_order_book_statistics(pair):
         avg_price_relative_difference=avg_price_relative_difference,
         max_price_difference=max_price_difference,
         max_price_relative_difference=max_price_relative_difference,
+        min_price_difference=min_price_difference,
+        min_price_relative_difference=min_price_relative_difference,
         avg_current_price=avg_current_price,
         avg_market_price=avg_market_price
     )

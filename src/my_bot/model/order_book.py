@@ -35,6 +35,8 @@ class OrderBook:
         self.avg_price_relative_difference = None
         self.max_price_difference = None
         self.max_price_relative_difference = None
+        self.min_price_difference = None
+        self.min_price_relative_difference = None
         self.avg_current_price = None
         self.avg_market_price = None
         self.update()

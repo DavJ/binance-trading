@@ -88,9 +88,9 @@ class Application:
                 asset.get_balance()
                 asset.update_last_trades()
 
-        pre_sorted_order_books = [order_book for order_book in self.order_books if order_book.avg_price_relative_difference is not None]
+        pre_sorted_order_books = [order_book for _, order_book in self.order_books.items() if order_book.avg_price_relative_difference is not None]
 
-        sorted_order_books = sorted(self.pre_sorted_order_books.values(), key=lambda x: x.avg_price_relative_difference, reverse=False)
+        sorted_order_books = sorted(pre_sorted_order_books, key=lambda x: x.min_price_relative_difference, reverse=True)
 
         #might change slightly during algorithm due to async refresh of assets, but approximate value is OK
         total_asset_amount_in_main_currency = sum([asset.asset_amount_in_main_currency_market
@@ -102,10 +102,15 @@ class Application:
 
         #mutual algorithm
         for order_book in sorted_order_books:
+
             currency = order_book.currency
             trade_currency = order_book.trade_currency
 
             statistix = self.statistixes[currency + trade_currency]
+
+            #skip pairs that are not volatile enough
+            if statistix.relative_volatility < Decimal(CONFIGURATION.VOLATILITY_COEFICIENT)*order_book.min_price_relative_difference:
+                continue
 
             asset = self.assets[order_book.currency]
             trade_asset = self.assets[order_book.trade_currency]

@@ -6,6 +6,7 @@ import json
 import numpy as np
 import itertools
 import operator
+import statistics
 
 from binance import Client
 from src.my_bot.basic_tools import (CONFIGURATION, get_binance_client, get_async_binance_client,
@@ -64,6 +65,16 @@ class Statistix:
             self.min_price = min([Decimal(kline[2]) for kline in klines])
         except ValueError:
             self.min_price = None
+
+        try:
+            self.volatility = statistics.stdev(prices)
+        except:
+            self.volatility = None
+
+        try:
+            self.relative_volatility = self.volatility / statistics.mean(prices)
+        except:
+            self.relative_volatility = None
 
         changer = client.get_ticker(symbol=self.pair)
         self.daily_changer = Decimal(changer['priceChangePercent'])
