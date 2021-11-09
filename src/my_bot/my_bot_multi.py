@@ -1,7 +1,7 @@
 import asyncio
 from decimal import Decimal
 from basic_tools import (get_binance_client, CONFIGURATION, get_trading_currencies,
-                         round_down, TRADING_PAIRS, TRADING_CURRENCIES)
+                         round_down, TRADING_PAIRS, TRADING_CURRENCIES, cancel_obsolete_orders)
 from model.asset import Asset
 from model.ticker import Ticker
 from model.order_book import OrderBook
@@ -95,6 +95,8 @@ class Application:
                                                    for currency, asset in self.assets.items()])
 
         print(f'\n\nCurrently having approximately {total_asset_amount_in_main_currency} {CONFIGURATION.MAIN_CURRENCY} in total.\n\n')
+
+        cancel_obsolete_orders()
 
         #mutual algorithm
         for order_book in sorted_order_books:

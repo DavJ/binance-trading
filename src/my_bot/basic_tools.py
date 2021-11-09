@@ -7,6 +7,7 @@ import decouple
 from binance.client import Client, AsyncClient
 from binance import ThreadedWebsocketManager, BinanceSocketManager
 from functools import reduce
+from datetime import datetime, timedelta
 
 INI_FILE = os.path.dirname(os.path.realpath(__file__)) + '/settings.ini'
 
@@ -258,7 +259,6 @@ def possible_paths(currency, max_depth=3):
 
     return paths
 
-
 def possible_rounds(max_depth=3):
     rounds = []
     for c in TRADING_CURRENCIES:
@@ -267,3 +267,13 @@ def possible_rounds(max_depth=3):
                 rounds.append(p)
     return rounds
 
+def get_all_obsolete_orders():
+    client = get_binance_client()
+    orders = client.get_open_orders()
+    return [(order['symbol'], order['orderId']) for order in orders
+            if datetime.fromtimestamp(order['time']/1000) < datetime.now() - timedelta(minutes=int(CONFIGURATION.ORDER_VALIDITY))]
+
+def cancel_obsolete_orders():
+    client = get_binance_client()
+    for obsolete_order in get_all_obsolete_orders():
+        client.cancel_order(symbol=obsolete_order[0], orderId=obsolete_order[1])
