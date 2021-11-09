@@ -8,6 +8,7 @@ from binance.client import Client, AsyncClient
 from binance import ThreadedWebsocketManager, BinanceSocketManager
 from functools import reduce
 from datetime import datetime, timedelta
+from binance.exceptions import BinanceAPIException
 
 INI_FILE = os.path.dirname(os.path.realpath(__file__)) + '/settings.ini'
 
