@@ -60,7 +60,7 @@ class Application:
             return 0
 
     def trade(self):
-        sorted_order_books = sorted(self.order_books.values(), key=lambda x: x.avg_price_difference, reverse=True)
+        sorted_order_books = sorted(self.order_books.values(), key=lambda x: x.avg_price_relative_difference, reverse=False)
 
         #might change slightly during algorithm due to async refresh of assets, but approximate value is OK
         total_asset_amount_in_main_currency = sum([self.user_ticker.assets[key].asset_amount_in_main_currency_market
@@ -79,8 +79,10 @@ class Application:
             asset = self.user_ticker.assets[order_book.currency]
             limit_price = order_book.strategical_buying_price
 
-            if ((allowed_buy_amount_in_main_currency > 0) #and asset.statistix.eligible_for_buy()
-                 and self.max_growth_predicted(asset.currency) >= 0):
+            if ((allowed_buy_amount_in_main_currency > 0)
+                    and asset.statistix is not None
+                    and asset.statistix.average_price > limit_price
+                    and self.max_growth_predicted(asset.currency) >= 0):
                 buy_amount = max(0, allowed_buy_amount_in_main_currency / order_book.avg_buy_price - asset.asset_amount_total)
                 if not CONFIGURATION.PLACE_BUY_ORDER_ONLY_IF_PRICE_MATCHES or order_book.min_buy_price <= limit_price:
                     self.active_orders.append(

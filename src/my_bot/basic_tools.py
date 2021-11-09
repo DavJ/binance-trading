@@ -7,11 +7,25 @@ import decouple
 from binance.client import Client, AsyncClient
 from binance import ThreadedWebsocketManager, BinanceSocketManager
 from functools import reduce
+from datetime import datetime, timedelta
+from binance.exceptions import BinanceAPIException
 
 INI_FILE = os.path.dirname(os.path.realpath(__file__)) + '/settings.ini'
 
 config = decouple.Config(decouple.RepositoryEnv(INI_FILE))
 
+class Configuration:
+
+    def __init__(self):
+        for attribute in ['MAIN_CURRENCY', 'TRADING_CURRENCIES', 'MINIMAL_MAIN_CURRENCY_BALANCE',
+                          'BUY_FEE', 'SELL_FEE', 'BUY_PROFIT', 'SELL_PROFIT', 'BUY_STRATEGY', 'SELL_STRATEGY',
+                          'DB_FILE', 'USE_ASYNC_CLIENT', 'MAX_ASSET_FRACTION', 'SLEEP',
+                          'BUY_DAILY_CHANGER', 'SELL_DAILY_CHANGER', 'SELL_IMMEDIATELY',
+                          'PLACE_BUY_ORDER_ONLY_IF_PRICE_MATCHES', 'ORDER_VALIDITY', 'VOLATILITY_COEFICIENT']:
+            setattr(self, attribute, config(attribute))
+
+
+CONFIGURATION = Configuration()
 
 def get_binance_client():
     return Client(config('BINANCE_API_KEY'), config('BINANCE_API_SECRET'))
@@ -151,6 +165,11 @@ def get_order_book_statistics(pair):
         max_price_difference = None
 
     try:
+        min_price_difference = min_sell_price - max_buy_price
+    except TypeError:
+        min_price_difference = None
+
+    try:
         avg_price_relative_difference = 2 * avg_price_difference / (avg_sell_price + avg_buy_price)
     except TypeError:
         avg_price_relative_difference = None
@@ -159,6 +178,12 @@ def get_order_book_statistics(pair):
         max_price_relative_difference = 2 * max_price_difference / (max_sell_price + min_buy_price)
     except TypeError:
         max_price_relative_difference = None
+
+    try:
+        min_price_relative_difference = 2 * min_price_difference / (min_sell_price + max_buy_price)
+    except TypeError:
+        min_price_relative_difference = None
+
 
     return dict(
         _bids=_bids,
@@ -175,24 +200,26 @@ def get_order_book_statistics(pair):
         avg_price_relative_difference=avg_price_relative_difference,
         max_price_difference=max_price_difference,
         max_price_relative_difference=max_price_relative_difference,
+        min_price_difference=min_price_difference,
+        min_price_relative_difference=min_price_relative_difference,
         avg_current_price=avg_current_price,
         avg_market_price=avg_market_price
     )
 
 
-def get_average_buy_price_for_sell_quantity(trade_quantity, currency, main_currency='BNB'):
+def get_average_buy_price_for_sell_quantity(trade_quantity, currency, trade_currency=CONFIGURATION.MAIN_CURRENCY):
     return get_recent_opposite_trade_price_for_trade_quantity(trade_quantity=trade_quantity,
                                                 currency=currency,
-                                                main_currency=main_currency,
+                                                trade_currency=trade_currency,
                                                 side='SELL')
 
-def get_average_sell_price_for_buy_quantity(trade_quantity, currency, main_currency='BNB'):
+def get_average_sell_price_for_buy_quantity(trade_quantity, currency, trade_currency=CONFIGURATION.MAIN_CURRENCY):
     return get_recent_opposite_trade_price_for_trade_quantity(trade_quantity=trade_quantity,
                                                 currency=currency,
-                                                main_currency=main_currency,
+                                                trade_currency=trade_currency,
                                                 side='BUY')
 
-def get_recent_opposite_trade_price_for_trade_quantity(trade_quantity, currency, main_currency='BNB', side='BUY'):
+def get_recent_opposite_trade_price_for_trade_quantity(trade_quantity, currency, trade_currency=CONFIGURATION.MAIN_CURRENCY, side='BUY'):
 
     def calc_average_price_for_asset_amount(quantity, opposite_trades):
         sorted_trades = sorted(opposite_trades, key=lambda x: x['time'], reverse=True)
@@ -211,9 +238,9 @@ def get_recent_opposite_trade_price_for_trade_quantity(trade_quantity, currency,
         else:
             raise(f'Division by zero missing previous trades or zero trade quantity. Trade quantity={trade_quantity}')
 
-    if currency != main_currency:
+    if currency != trade_currency:
         client = get_binance_client()
-        asset_trades = client.get_my_trades(symbol=currency + main_currency, limit=100)
+        asset_trades = client.get_my_trades(symbol=currency + trade_currency, limit=100)
 
         if side == 'BUY':
             opposite_side_trades = list(filter(lambda x: not x['isBuyer'], asset_trades))
@@ -226,21 +253,8 @@ def get_recent_opposite_trade_price_for_trade_quantity(trade_quantity, currency,
             return  calc_average_price_for_asset_amount(trade_quantity, opposite_trades= opposite_side_trades)
         except Exception:
             # set some initial values
-            statistics = get_order_book_statistics(currency + main_currency)
+            statistics = get_order_book_statistics(currency + trade_currency)
             return statistics['avg_buy_price'] if side == 'SELL' else statistics['avg_sell_price']
-
-class Configuration:
-
-    def __init__(self):
-        for attribute in ['MAIN_CURRENCY', 'TRADING_CURRENCIES', 'MINIMAL_MAIN_CURRENCY_BALANCE',
-                          'BUY_FEE', 'SELL_FEE', 'BUY_PROFIT', 'SELL_PROFIT', 'BUY_STRATEGY', 'SELL_STRATEGY',
-                          'DB_FILE', 'USE_ASYNC_CLIENT', 'MAX_ASSET_FRACTION', 'SLEEP',
-                          'BUY_DAILY_CHANGER', 'SELL_DAILY_CHANGER', 'SELL_IMMEDIATELY',
-                          'PLACE_BUY_ORDER_ONLY_IF_PRICE_MATCHES']:
-            setattr(self, attribute, config(attribute))
-
-
-CONFIGURATION = Configuration()
 
 TRADING_CURRENCIES = get_trading_currencies()
 TRADING_PAIRS = get_trading_pairs()
@@ -259,7 +273,6 @@ def possible_paths(currency, max_depth=3):
 
     return paths
 
-
 def possible_rounds(max_depth=3):
     rounds = []
     for c in TRADING_CURRENCIES:
@@ -268,3 +281,14 @@ def possible_rounds(max_depth=3):
                 rounds.append(p)
     return rounds
 
+def get_all_obsolete_orders():
+    client = get_binance_client()
+    orders = client.get_open_orders()
+    return [(order['symbol'], order['orderId']) for order in orders
+            if datetime.fromtimestamp(order['time']/1000) < datetime.now() - timedelta(minutes=int(CONFIGURATION.ORDER_VALIDITY))]
+
+def cancel_obsolete_orders():
+    client = get_binance_client()
+    for obsolete_order in get_all_obsolete_orders():
+        client.cancel_order(symbol=obsolete_order[0], orderId=obsolete_order[1])
+        print(f'Cancelling order {obsolete_order}')

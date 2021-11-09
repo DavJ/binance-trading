@@ -17,7 +17,7 @@ from src.my_bot.model.profit import Profit
 
 class Order:
 
-    def __init__(self, side=None, currency=None, amount=None, limit_price=None, type='LIMIT', main_currency=CONFIGURATION.MAIN_CURRENCY):
+    def __init__(self, side=None, currency=None, amount=None, limit_price=None, type='LIMIT', trade_currency=CONFIGURATION.MAIN_CURRENCY):
         """
 
         :param side:
@@ -25,7 +25,7 @@ class Order:
         :param amount:
         :param price:                   ...                       if not provided profitable price is used (recommended)
         :param type:
-        :param main_currency:
+        :param trade_currency:
         :param profit:
         """
 
@@ -36,10 +36,9 @@ class Order:
         self.type = type
         self._order = None
         self._info = None
-        self.main_currency = main_currency
+        self.trade_currency = trade_currency
         self.profit = Profit()
         self.limit_price = limit_price
-
 
         print(str(self))
 
@@ -51,9 +50,9 @@ class Order:
 
     def __repr__(self):
         if self.side == 'BUY':
-            return f"Order(side={self.side}, currency={self.currency}, amount={self.quantity}, price={self.buy_price}, type={self.type})"
+            return f"Order(side={self.side}, currency={self.currency}, amount={self.quantity}, price={self.buy_price}, type={self.type}, trade_currency={self.trade_currency})"
         else:
-            return f"Order(side={self.side}, currency={self.currency}, amount={self.quantity}, price={self.sell_price}, type={self.type})"
+            return f"Order(side={self.side}, currency={self.currency}, amount={self.quantity}, price={self.sell_price}, type={self.type}, trade_currency={self.trade_currency})"
 
     @property
     def base_asset_precision(self):
@@ -62,7 +61,7 @@ class Order:
 
     @property
     def pair(self):
-        return self.currency + self.main_currency
+        return self.currency + self.trade_currency
 
     @property
     def quantity(self):
@@ -111,12 +110,12 @@ class Order:
     def average_buy_price_for_sell_trade(self):
         return get_average_buy_price_for_sell_quantity(trade_quantity=self.quantity,
                                                        currency=self.currency,
-                                                       main_currency=self.main_currency)
+                                                       trade_currency=self.trade_currency)
 
     @property
     def average_sell_price_for_buy_trade(self):
         return get_average_sell_price_for_buy_quantity(trade_quantity=self.quantity, currency=self.currency,
-                                                       main_currency=self.main_currency)
+                                                       trade_currency=self.trade_currency)
 
     @property
     def profitable_price(self):

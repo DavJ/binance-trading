@@ -6,10 +6,12 @@ import datetime
 import aiosqlite
 import json
 from src.my_bot.model.statistix import Statistix
+from binance.exceptions import BinanceAPIException
 
 
 from src.my_bot.basic_tools import (CONFIGURATION, get_binance_client, get_async_binance_client,
-                                    ilen, get_order_book_statistics)
+                                    ilen, get_order_book_statistics, TRADING_PAIRS, use_async_client)
+
 
 
 class Asset:
@@ -24,8 +26,8 @@ class Asset:
         self.recent_average_sell_price = None
         self._time = None
         self._id = None
-        if self.currency != self.main_currency:
-            self.statistix = Statistix(currency=self.currency, main_currency=self.main_currency)
+        if self.currency + self.main_currency in TRADING_PAIRS:
+            self.statistix = Statistix(currency=self.currency, trade_currency=self.main_currency)
         else:
             self.statistix = None
 
@@ -107,7 +109,12 @@ class Asset:
 
         if self.currency != self.main_currency:
             client = get_binance_client()
-            asset_trades = client.get_my_trades(symbol=self.currency + self.main_currency, limit=30)
+            try:
+                asset_trades = client.get_my_trades(symbol=self.currency + self.main_currency, limit=30)
+            except BinanceAPIException as err:
+                print((f'invalid symbol {self.currency+self.main_currency}'))
+                raise err
+
             buy_trades = list(filter(lambda x: x['isBuyer'], asset_trades))
             sell_trades = list(filter(lambda x: not x['isBuyer'], asset_trades))
 

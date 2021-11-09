@@ -16,10 +16,10 @@ from src.my_bot.model.chart import Chart
 
 class OrderBook:
     #ticker https://python-binance.readthedocs.io/en/latest/websockets.html
-    def __init__(self, currency=None, main_currency=CONFIGURATION.MAIN_CURRENCY):
+    def __init__(self, currency=None, trade_currency=CONFIGURATION.MAIN_CURRENCY):
         self.currency = currency
-        self.asset_currency = main_currency
-        self.pair = currency + main_currency
+        self.trade_currency = trade_currency
+        self.pair = currency + trade_currency
         self.time = None
         self._bids = None
         self._asks = None
@@ -35,12 +35,14 @@ class OrderBook:
         self.avg_price_relative_difference = None
         self.max_price_difference = None
         self.max_price_relative_difference = None
+        self.min_price_difference = None
+        self.min_price_relative_difference = None
         self.avg_current_price = None
         self.avg_market_price = None
         self.update()
 
     def __repr__(self):
-        return f"OrderBook(currency='{self.currency}, asset_currency={self.asset_currency})"
+        return f"OrderBook(currency='{self.currency}, asset_currency={self.trade_currency})"
 
     def update(self):
         statistics = get_order_book_statistics(self.pair)
