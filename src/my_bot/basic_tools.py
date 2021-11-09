@@ -277,3 +277,4 @@ def cancel_obsolete_orders():
     client = get_binance_client()
     for obsolete_order in get_all_obsolete_orders():
         client.cancel_order(symbol=obsolete_order[0], orderId=obsolete_order[1])
+        print(f'Cancelling order {obsolete_order}')
