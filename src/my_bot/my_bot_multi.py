@@ -1,7 +1,8 @@
 import asyncio
 from decimal import Decimal
 from basic_tools import (get_binance_client, CONFIGURATION, get_trading_currencies,
-                         round_down, TRADING_PAIRS, TRADING_CURRENCIES, cancel_obsolete_orders)
+                         round_down, TRADING_PAIRS, TRADING_CURRENCIES, cancel_obsolete_orders,
+                         get_average_buy_price_for_sell_quantity, get_average_sell_price_for_buy_quantity)
 from model.asset import Asset
 from model.ticker import Ticker
 from model.order_book import OrderBook
@@ -120,8 +121,12 @@ class Application:
                 and statistix.average_price > buy_limit_price
                 and self.max_growth_predicted(currency) >= 0):
                     buy_amount = max(0, trade_asset.asset_amount_free*Decimal(CONFIGURATION.MAX_ASSET_FRACTION) / buy_limit_price)
+
+                    avg_sell_price = get_average_sell_price_for_buy_quantity(buy_amount, currency, trade_currency)
+                    profitable_buy_price = min(Profit().profitable_buy_price_for_previous_sell_price(avg_sell_price), buy_limit_price)
+
                     self.active_orders.append(Order(side='BUY', currency=asset.currency, amount=buy_amount,
-                                                    limit_price=buy_limit_price, trade_currency=trade_currency))
+                                                    limit_price=profitable_buy_price, trade_currency=trade_currency))
 
                     update_assets([asset, trade_asset])
 
@@ -130,8 +135,12 @@ class Application:
                 and statistix.average_price < sell_limit_price
                 and self.min_drop_predicted(asset.currency) <= 0):
                    sell_amount = max(0, asset.asset_amount_free * Decimal(CONFIGURATION.MAX_ASSET_FRACTION))
+
+                   avg_buy_price = get_average_buy_price_for_sell_quantity(sell_amount, currency, trade_currency)
+                   profitable_sell_price = max(Profit().profitable_sell_price_for_previous_buy_price(avg_buy_price), sell_limit_price)
+
                    self.active_orders.append(Order(side='SELL', currency=asset.currency, amount=sell_amount,
-                                                   limit_price=sell_limit_price, trade_currency=trade_currency))
+                                                   limit_price=profitable_sell_price, trade_currency=trade_currency))
 
                    update_assets([asset, trade_asset])
 

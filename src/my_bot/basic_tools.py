@@ -239,6 +239,7 @@ def get_recent_opposite_trade_price_for_trade_quantity(trade_quantity, currency,
             raise(f'Division by zero missing previous trades or zero trade quantity. Trade quantity={trade_quantity}')
 
     if currency != trade_currency:
+
         client = get_binance_client()
         asset_trades = client.get_my_trades(symbol=currency + trade_currency, limit=100)
 
