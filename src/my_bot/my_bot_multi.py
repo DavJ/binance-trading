@@ -123,12 +123,12 @@ class Application:
                     buy_amount = max(0, trade_asset.asset_amount_free*Decimal(CONFIGURATION.MAX_ASSET_FRACTION) / buy_limit_price)
 
                     avg_sell_price = get_average_sell_price_for_buy_quantity(buy_amount, currency, trade_currency)
-                    profitable_buy_price = min(Profit().profitable_buy_price_for_previous_sell_price(avg_sell_price), buy_limit_price)
 
-                    self.active_orders.append(Order(side='BUY', currency=asset.currency, amount=buy_amount,
-                                                    limit_price=profitable_buy_price, trade_currency=trade_currency))
+                    if buy_limit_price <= Profit().profitable_buy_price_for_previous_sell_price(avg_sell_price):
+                        self.active_orders.append(Order(side='BUY', currency=asset.currency, amount=buy_amount,
+                                                  limit_price=buy_limit_price, trade_currency=trade_currency))
 
-                    update_assets([asset, trade_asset])
+                        update_assets([asset, trade_asset])
 
             sell_limit_price = order_book.strategical_selling_price
             if (asset.asset_amount_free > 0
@@ -137,10 +137,10 @@ class Application:
                    sell_amount = max(0, asset.asset_amount_free * Decimal(CONFIGURATION.MAX_ASSET_FRACTION))
 
                    avg_buy_price = get_average_buy_price_for_sell_quantity(sell_amount, currency, trade_currency)
-                   profitable_sell_price = max(Profit().profitable_sell_price_for_previous_buy_price(avg_buy_price), sell_limit_price)
 
-                   self.active_orders.append(Order(side='SELL', currency=asset.currency, amount=sell_amount,
-                                                   limit_price=profitable_sell_price, trade_currency=trade_currency))
+                   if sell_limit_price >= Profit().profitable_sell_price_for_previous_buy_price(avg_buy_price):
+                       self.active_orders.append(Order(side='SELL', currency=asset.currency, amount=sell_amount,
+                                                 limit_price=sell_limit_price, trade_currency=trade_currency))
 
                    update_assets([asset, trade_asset])
 
