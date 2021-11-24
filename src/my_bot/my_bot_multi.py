@@ -37,8 +37,11 @@ class Application:
 
     def main(self):
         while True:
-            self.update()
-            self.trade()
+            try:
+                self.update()
+                self.trade()
+            except Exception:
+                pass
 
             loop = asyncio.get_event_loop()
             loop.run_until_complete(asyncio.sleep(int(CONFIGURATION.SLEEP)))
@@ -149,7 +152,22 @@ class Application:
     def cancel_old_orders(self):
         pass
 
+def full_stack():
+    import traceback, sys
+    exc = sys.exc_info()[0]
+    stack = traceback.extract_stack()[:-1]  # last one would be full_stack()
+    if exc is not None:  # i.e. an exception is present
+        del stack[-1]       # remove call of full_stack, the printed exception
+                            # will contain the caught exception caller instead
+    trc = 'Traceback (most recent call last):\n'
+    stackstr = trc + ''.join(traceback.format_list(stack))
+    if exc is not None:
+         stackstr += '  ' + traceback.format_exc().lstrip(trc)
+    return stackstr
 
 if __name__ == "__main__":
     application = Application()
-    application.main()
+    try:
+        application.main()
+    except:
+        full_stack()
