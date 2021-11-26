@@ -1,11 +1,12 @@
-numpy~=1.20.3
-pykalman~=0.9.5
+numpy
+pykalman
 python-binance
 regex
-idna~=2.10
+idna
 typing_extensions
-chardet
 requests
-dateutil
+#dateutil
 python-decouple
 aiosqlite
+scipy
+tensorflow
