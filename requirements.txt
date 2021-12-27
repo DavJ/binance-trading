@@ -9,3 +9,5 @@ requests
 dateutil
 python-decouple
 aiosqlite
+cctx
+pandas
