@@ -8,6 +8,8 @@ from binance.client import Client, AsyncClient
 from binance import ThreadedWebsocketManager, BinanceSocketManager
 from functools import reduce
 from datetime import datetime, timedelta
+
+from binance.enums import HistoricalKlinesType
 from binance.exceptions import BinanceAPIException
 
 INI_FILE = os.path.dirname(os.path.realpath(__file__)) + '/settings.ini'
@@ -293,3 +295,21 @@ def cancel_obsolete_orders():
     for obsolete_order in get_all_obsolete_orders():
         client.cancel_order(symbol=obsolete_order[0], orderId=obsolete_order[1])
         print(f'Cancelling order {obsolete_order}')
+
+
+def get_historical_klines(pair, limit=500):
+    client = get_binance_client()
+    start_timestamp = int((datetime.now() - timedelta(minutes=15*limit)).timestamp()*1000)
+    return client.get_historical_klines(symbol=pair, interval=Client.KLINE_INTERVAL_15MINUTE,
+                                        start_str=start_timestamp, #limit=limit,
+                                        klines_type=HistoricalKlinesType.SPOT)
+
+def normalize_rate(past_rate, current_rate, factor=1):
+    return 2*math.atan(factor*(past_rate/current_rate - 1))/math.pi()
+
+def get_normalized_close_price(pair):
+    return [normalize_rate(sample[3]) for sample in get_historical_klines(pair)]
+
+
+hk = get_historical_klines(pair='BNBBUSD')
+pass

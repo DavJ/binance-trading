@@ -26,11 +26,11 @@ def pair_to_dataframe(currency1, currency2):
            print(hours)
 
     # We are changing the name of the columns, important to use trading indicators later on
-    ohlcv_dataframe['date']   = ohlcv_dataframe[0]
-    ohlcv_dataframe['open']   = ohlcv_dataframe[1]
-    ohlcv_dataframe['high']   = ohlcv_dataframe[2]
-    ohlcv_dataframe['low']    = ohlcv_dataframe[3]
-    ohlcv_dataframe['close']  = ohlcv_dataframe[4]
+    ohlcv_dataframe['date'] = ohlcv_dataframe[0]
+    ohlcv_dataframe['open'] = ohlcv_dataframe[1]
+    ohlcv_dataframe['high'] = ohlcv_dataframe[2]
+    ohlcv_dataframe['low'] = ohlcv_dataframe[3]
+    ohlcv_dataframe['close'] = ohlcv_dataframe[4]
     ohlcv_dataframe['volume'] = ohlcv_dataframe[5]
     ohlcv_dataframe = ohlcv_dataframe.set_index('date')
     # Change the timstamp to date in UTC
