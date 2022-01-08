@@ -295,7 +295,6 @@ def cancel_obsolete_orders():
         client.cancel_order(symbol=obsolete_order[0], orderId=obsolete_order[1])
         print(f'Cancelling order {obsolete_order}')
 
-
 def get_historical_klines(pair, limit=500):
     client = get_binance_client()
     start_timestamp = int((datetime.now() - timedelta(minutes=15*limit)).timestamp()*1000)
@@ -303,12 +302,19 @@ def get_historical_klines(pair, limit=500):
                                         start_str=start_timestamp, #limit=limit,
                                         klines_type=HistoricalKlinesType.SPOT)
 
-def normalize_rate(past_rate, current_rate, factor=1):
-    return 2*math.atan(factor*(past_rate/current_rate - 1))/math.pi()
+def normalize_past_rate(past_rate, current_rate, scale=1):
+    return 2*math.atan(scale*(Decimal(past_rate)/Decimal(current_rate) - 1))/math.pi
 
 def get_normalized_close_price(pair):
-    return [normalize_rate(sample[3]) for sample in get_historical_klines(pair)]
+    """
+    refer to https://github.com/binance-us/binance-official-api-docs/blob/master/rest-api.md#klinecandlestick-data
+    close_price has index 4
+    """
+    scale = 1
+    olhvc_history = get_historical_klines(pair)
+    return [normalize_past_rate(sample[4], olhvc_history[-1][4], 10) for sample in olhvc_history]
 
 
 hk = get_historical_klines(pair='BNBBUSD')
+cp = get_normalized_close_price('BNBBUSD')
 pass
