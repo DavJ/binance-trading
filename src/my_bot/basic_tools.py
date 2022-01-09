@@ -8,7 +8,7 @@ from binance.client import Client, AsyncClient
 from binance import ThreadedWebsocketManager, BinanceSocketManager
 from functools import reduce
 from datetime import datetime, timedelta
-
+import numpy as np
 from binance.enums import HistoricalKlinesType
 from binance.exceptions import BinanceAPIException
 
@@ -77,6 +77,18 @@ def get_trading_pairs():
         for currency2 in trading_currencies:
             if currency1 + currency2 in trading_symbols:
                 pairs.append((currency1, currency2,))
+    return pairs
+
+def get_main_currency_pairs():
+    pairs = []
+    main_currency = config('MAIN_CURRENCY')
+    trading_currencies = get_trading_currencies()
+    trading_symbols = {s['symbol'] for s in get_exchange_info()['symbols']}
+    for currency1 in trading_currencies:
+        for currency2 in trading_currencies:
+            if currency1 + currency2 in trading_symbols:
+                if currency1 == main_currency or currency2 == main_currency:
+                    pairs.append((currency1, currency2,))
     return pairs
 
 def get_evaluation_currencies():
@@ -314,7 +326,29 @@ def get_normalized_close_price(pair):
     olhvc_history = get_historical_klines(pair)
     return [normalize_past_rate(sample[4], olhvc_history[-1][4], 10) for sample in olhvc_history]
 
+def get_normalized_close_price(pair):
+    """
+    refer to https://github.com/binance-us/binance-official-api-docs/blob/master/rest-api.md#klinecandlestick-data
+    close_price has index 4
+    """
+    scale = 1
+    olhvc_history = get_historical_klines(pair)
+    return [normalize_past_rate(sample[4], olhvc_history[-1][4], 10) for sample in olhvc_history]
+
+
+def get_normalized_close_price_train_data_for_pair(pair):
+    M = 5
+    cp = get_normalized_close_price(pair)
+    return np.array([[cp[i + k**M] for k in range(2**M)] for i in range(len(cp) - 2**M)])
+
+def get_normalized_close_price_train_data_by_pairs():
+    return {pair: get_normalized_close_price_train_data_for_pair(pair[0] + pair[1]) for pair in get_main_currency_pairs()}
+
+def get_normalized_close_prices():
+    return {pair: get_normalized_close_price(pair[0] + pair[1]) for pair in get_main_currency_pairs()}
 
 hk = get_historical_klines(pair='BNBBUSD')
 cp = get_normalized_close_price('BNBBUSD')
-pass
+mp = get_main_currency_pairs()
+ncp = get_normalized_close_prices()
+ntd = get_normalized_close_price_train_data_by_pairs()
