@@ -89,7 +89,7 @@ def get_main_currency_pairs():
             if currency1 + currency2 in trading_symbols:
                 if currency1 == main_currency or currency2 == main_currency:
                     pairs.append((currency1, currency2,))
-    return pairs
+    return sorted(pairs)
 
 def get_evaluation_currencies():
     return get_trading_currencies() + [config('MAIN_CURRENCY')]
@@ -314,41 +314,37 @@ def get_historical_klines(pair, limit=500):
                                         start_str=start_timestamp, #limit=limit,
                                         klines_type=HistoricalKlinesType.SPOT)
 
-def normalize_past_rate(past_rate, current_rate, scale=1):
+def normalize_rate(past_rate, current_rate, scale=1):
     return 2*math.atan(scale*(Decimal(past_rate)/Decimal(current_rate) - 1))/math.pi
 
-def get_normalized_close_price(pair):
+def get_close_price(pair):
     """
     refer to https://github.com/binance-us/binance-official-api-docs/blob/master/rest-api.md#klinecandlestick-data
     close_price has index 4
     """
-    scale = 1
-    olhvc_history = get_historical_klines(pair)
-    return [normalize_past_rate(sample[4], olhvc_history[-1][4], 10) for sample in olhvc_history]
+    scale = 10
+    olhvc_history = get_historical_klines(pair[0] + pair[1])
+    return [olhvc_history[-1][4] for sample in olhvc_history]
 
 def get_normalized_close_price(pair):
     """
     refer to https://github.com/binance-us/binance-official-api-docs/blob/master/rest-api.md#klinecandlestick-data
     close_price has index 4
     """
-    scale = 1
-    olhvc_history = get_historical_klines(pair)
-    return [normalize_past_rate(sample[4], olhvc_history[-1][4], 10) for sample in olhvc_history]
-
+    scale = 10
+    olhvc_history = get_historical_klines(pair[0] + pair[1])
+    return [normalize_past_rate(sample[4], olhvc_history[-1][4], scale) for sample in olhvc_history]
 
 def get_normalized_close_price_train_data_for_pair(pair):
-    M = 5
+    M, N = 5, 5   #N ... split to chunks of length 2^N, M .... predict exponent
     cp = get_normalized_close_price(pair)
-    return np.array([[cp[i + k**M] for k in range(2**M)] for i in range(len(cp) - 2**M)])
+    train_data = [[cp[i + k**2 - j**2] for k in range(M) for j in range(N)] for i in range(2**N, len(cp) - 2**M)] #TODO looks wrong
+    #train_data = [[cp[i + k ** 2 - j ** 2] for k in range(M) for j in range(N)] for i inrange(2 ** N, len(cp) - 2 ** M)]
+
+    return np.array(train_data)
 
 def get_normalized_close_price_train_data_by_pairs():
     return {pair: get_normalized_close_price_train_data_for_pair(pair[0] + pair[1]) for pair in get_main_currency_pairs()}
 
 def get_normalized_close_prices():
     return {pair: get_normalized_close_price(pair[0] + pair[1]) for pair in get_main_currency_pairs()}
-
-hk = get_historical_klines(pair='BNBBUSD')
-cp = get_normalized_close_price('BNBBUSD')
-mp = get_main_currency_pairs()
-ncp = get_normalized_close_prices()
-ntd = get_normalized_close_price_train_data_by_pairs()
