@@ -83,13 +83,6 @@ class Brain:
 
         self.refresh_train_data()
 
-    @property
-    def test_data(self):
-        for i in range(len(self.x_train)):
-            if sum(self.x_train[-i]) != 0:
-                return ([self.x_train[-i]], [self.y_train[-i]])
-
-
     def refresh_train_data(self):
         def pair_symbol(pair):
             return pair[0] + pair[1]
@@ -109,7 +102,7 @@ class Brain:
         self.train_data = np.array(all_data[0:int(length_of_data*0.7)])
         self.validation_data = np.array(all_data[int(length_of_data*0.7): int(length_of_data*0.9)])
         self.test_data = np.array(all_data[int(length_of_data*0.9):])
-        self.num_features = all_data.shape[1]
+        self.num_features = self.train_data.shape[1]
 
         self.train_mean = self.train_data.mean()
         self.train_std = self.train_data.std()
