@@ -1,3 +1,8 @@
+import os
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
+os.environ['TF_XLA_FLAGS'] = '--tf_xla_enable_xla_devices'
+#os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+#os.environ["SM_FRAMEWORK"] = "tf.keras"
 import asyncio
 import numpy as np
 from decimal import Decimal
@@ -14,70 +19,147 @@ from model.profit import Profit
 from time import sleep
 from datetime import datetime
 import math
-from keras.preprocessing import sequence
-from keras.models import Sequential
-from keras.layers import Dense, Embedding
-from keras.layers import LSTM
-from keras.datasets import imdb
-from basic_tools import get_main_currency_pairs, get_close_price, normalize_rate
+import tensorflow as tf
+from tensorflow.keras import Sequential
+from tensorflow.keras.layers import Conv2D, Flatten, Dense, LSTM, Embedding
 
 
-def get_normalized_close_price_train_data_for_pair(pair):
-    M, N = 5, 5   #N ... split to chunks of length 2^N, M .... predict exponent
-    cp = get_normalized_close_price(pair)
-    train_data = [[cp[i + k**2 - j**2] for k in range(M) for j in range(N)] for i in range(2**N, len(cp) - 2**M)]
-    #train_data = [[cp[i + k ** 2 - j ** 2] for k in range(M) for j in range(N)] for i inrange(2 ** N, len(cp) - 2 ** M)]
-
-    return np.array(train_data)
+from basic_tools import get_main_currency_pairs, get_close_price, normalize_rate, get_relative_close_price
 
 
-class LSTM:
+class WindowGenerator():
+  def __init__(self, input_width, label_width, shift,
+               train_df=None, val_df=None, test_df=None,
+               label_columns=None):
+    # Store the raw data.
+    self.train_df = train_df
+    self.val_df = val_df
+    self.test_df = test_df
 
-    def __init__(self):
+    # Work out the label column indices.
+    self.label_columns = label_columns
+    if label_columns is not None:
+      self.label_columns_indices = {name: i for i, name in
+                                    enumerate(label_columns)}
+    self.column_indices = {name: i for i, name in
+                           enumerate(train_df.columns)}
 
-        self.N = 5     #2^N is number of samples for prediction
+    # Work out the window parameters.
+    self.input_width = input_width
+    self.label_width = label_width
+    self.shift = shift
+
+    self.total_window_size = input_width + shift
+
+    self.input_slice = slice(0, input_width)
+    self.input_indices = np.arange(self.total_window_size)[self.input_slice]
+
+    self.label_start = self.total_window_size - self.label_width
+    self.labels_slice = slice(self.label_start, None)
+    self.label_indices = np.arange(self.total_window_size)[self.labels_slice]
+
+  def __repr__(self):
+    return '\n'.join([
+        f'Total window size: {self.total_window_size}',
+        f'Input indices: {self.input_indices}',
+        f'Label indices: {self.label_indices}',
+        f'Label column name(s): {self.label_columns}'])
+
+
+class Brain:
+
+    def __init__(self, units=64):
+
+        self.N = 6     #2^N is number of samples for prediction
         self.M = 2     #2^M is number of samples to predict
-        self.pairs =  get_main_currency_pairs()
+        self.IN_STEPS = 2 ** self.N
+        self.OUT_STEPS = 2 ** self.M
+        self.units = units
+        self.pairs = get_main_currency_pairs()
+        self.num_pairs = len(self.pairs)
+        self.window = None
         self.train_data = None
+        self.history = None
 
         self.refresh_train_data()
 
+    @property
+    def test_data(self):
+        for i in range(len(self.x_train)):
+            if sum(self.x_train[-i]) != 0:
+                return ([self.x_train[-i]], [self.y_train[-i]])
+
+
     def refresh_train_data(self):
-        x_train = []
-        y_train = []
-        scale = 10
+        def pair_symbol(pair):
+            return pair[0] + pair[1]
+
+        relative_close_prices = {}
 
         for pair in self.pairs:
-            cp = get_close_price(pair)
-            batch_len = (2**self.N + 2**self.M)
-            batch_count = len(cp) - batch_len
+            rcp = get_relative_close_price(pair)
+            relative_close_prices.update(**{pair_symbol(pair): rcp})
 
-            x_train.append(
-                np.array([normalize_rate(cp[i + c], cp[2**self.N + c], scale=scale)
-                for c in range(batch_count) for i in range(0, 2 ** self.N)])
-            )
+        all_data = []
+        length_of_data = len(rcp)
+        for index in range(length_of_data):
+            all_data.append(np.array([(relative_close_prices[pair_symbol(pair)][index]-1) for pair in self.pairs]))
 
-            y_train.append(
-                np.array([normalize_rate(cp[j + c], cp[2**self.N + c], scale=scale) for c in range(batch_count)
-                 for j in range(2 ** self.N, batch_len)])
-            )
+        #split 70%, 20%, 10%
+        self.train_data = np.array(all_data[0:int(length_of_data*0.7)])
+        self.validation_data = np.array(all_data[int(length_of_data*0.7): int(length_of_data*0.9)])
+        self.test_data = np.array(all_data[int(length_of_data*0.9):])
+        self.num_features = all_data.shape[1]
 
-        self.x_train = np.array(x_train)
-        self.y_train = np.array(y_train)
+        self.train_mean = self.train_data.mean()
+        self.train_std = self.train_data.std()
+
+        self.normalized_train_data = (self.train_data - self.train_mean) / self.train_std
+        self.normalized_validation_data = (self.validation_data - self.train_mean) / self.train_std
+        self.normalized_test_data = (self.test_data - self.train_mean) / self.train_std
+
+        self.window = WindowGenerator(input_width=self.IN_STEPS,
+                                      label_width=self.OUT_STEPS,
+                                      shift=self.OUT_STEPS,
+                                      train_df=self.normalized_train_data,
+                                      val_df=self.normalized_validation_data,
+                                      test_df=self.normalized_test_data)
 
     def create_model(self):
-       self.model = Sequential()
-       self.model.add(Embedding(2000, 128))
-       self.model.add(LSTM(128, dropout=0.2, recurrent_dropout=0.2))
-       self.model.add(Dense(1, activation='sigmoid'))
+        self.model = tf.keras.Sequential([
+            # Shape [batch, time, features] => [batch, lstm_units].
+            # Adding more `lstm_units` just overfits more quickly.
+            tf.keras.layers.LSTM(self.units, return_sequences=False),
+            # Shape => [batch, out_steps*features].
+            tf.keras.layers.Dense(self.OUT_STEPS * self.num_features * self.num_pairs,
+                                  kernel_initializer=tf.initializers.zeros()),
+            # Shape => [batch, out_steps, features].
+            tf.keras.layers.Reshape([self.OUT_STEPS, self.num_pairs, self.num_features])
+        ])
 
-    def fit(self):
-        self.model.fit(
-           self.x_train, self.y_train,
-           batch_size=1,
-           epochs=15,
-           #validation_data=(x_test, y_test)
-        )
+    @property
+    def window(self):
+        return self._window
+
+    @window.setter
+    def window(self, window):
+        self._window = window
+
+    def window_plot(self):
+        self.window.plot()
+
+    def compile_and_fit(self, patience=2, epochs=20):
+        early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
+                                                          patience=patience,
+                                                          mode='min')
+
+        self.model.compile(loss=tf.losses.MeanSquaredError(),
+                           optimizer=tf.optimizers.Adam(),
+                           metrics=[tf.metrics.MeanAbsoluteError()])
+
+        self.history = self.model.fit(self.window.train, epochs=epochs,
+                                 validation_data=self.window.val,
+                                 callbacks=[early_stopping])
 
 class Application:
 
@@ -90,22 +172,12 @@ class Application:
         self.active_orders = []
         self.profit = Profit()
 
-        #self.symbol_tickers = {}
-
-        #self.assets = {currency: Asset(currency=currency) for currency in TRADING_CURRENCIES}
-
-        #self.order_books = {curr1 + curr2: OrderBook(currency=curr1, trade_currency=curr2)
-        #                    for curr1, curr2 in TRADING_PAIRS}
-
-        #self.statistixes = {curr1 + curr2: Statistix(currency=curr1, trade_currency=curr2)
-        #                    for curr1, curr2 in TRADING_PAIRS}
-
     def main(self):
 
-        brain = LSTM()
-
+        brain = Brain()
         brain.create_model()
-        brain.fit()
+        brain.window_plot()
+        brain.compile_and_fit()
 
         while True:
             try:
@@ -131,8 +203,6 @@ def full_stack():
     return stackstr
 
 if __name__ == "__main__":
+    #os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
     application = Application()
-    try:
-        application.main()
-    except:
-        full_stack()
+    application.main()
