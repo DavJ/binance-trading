@@ -1,9 +1,13 @@
+'''
+https://www.tensorflow.org/tutorials/structured_data/time_series
+'''
 import os
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 os.environ['TF_XLA_FLAGS'] = '--tf_xla_enable_xla_devices'
 #os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 #os.environ["SM_FRAMEWORK"] = "tf.keras"
 import asyncio
+import pandas as pd
 import numpy as np
 from decimal import Decimal
 from basic_tools import (get_binance_client, CONFIGURATION, get_trading_currencies,
@@ -20,6 +24,7 @@ from time import sleep
 from datetime import datetime
 import math
 import tensorflow as tf
+import matplotlib.pyplot as plt
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Conv2D, Flatten, Dense, LSTM, Embedding
 
@@ -65,6 +70,58 @@ class WindowGenerator():
         f'Label indices: {self.label_indices}',
         f'Label column name(s): {self.label_columns}'])
 
+  def split_window(self, features):
+      inputs = features[:, self.input_slice, :]
+      labels = features[:, self.labels_slice, :]
+      if self.label_columns is not None:
+          labels = tf.stack(
+              [labels[:, :, self.column_indices[name]] for name in self.label_columns],
+              axis=-1)
+
+      # Slicing doesn't preserve static shape information, so set the shapes
+      # manually. This way the `tf.data.Datasets` are easier to inspect.
+      inputs.set_shape([None, self.input_width, None])
+      labels.set_shape([None, self.label_width, None])
+
+      return inputs, labels
+
+  def make_dataset(self, data):
+      data = np.array(data, dtype=np.float32)
+      ds = tf.keras.utils.timeseries_dataset_from_array(
+          data=data,
+          targets=None,
+          sequence_length=self.total_window_size,
+          sequence_stride=1,
+          shuffle=True,
+          batch_size=32, )
+
+      ds = ds.map(self.split_window)
+
+      return ds
+
+  @property
+  def train(self):
+      return self.make_dataset(self.train_df)
+
+  @property
+  def val(self):
+      return self.make_dataset(self.val_df)
+
+  @property
+  def test(self):
+      return self.make_dataset(self.test_df)
+
+  @property
+  def example(self):
+      """Get and cache an example batch of `inputs, labels` for plotting."""
+      result = getattr(self, '_example', None)
+      if result is None:
+          # No example batch was found, so get one from the `.train` dataset
+          result = next(iter(self.train))
+          # And cache it for next time
+          self._example = result
+      return result
+
 
 class Brain:
 
@@ -96,7 +153,7 @@ class Brain:
         all_data = []
         length_of_data = len(rcp)
         for index in range(length_of_data):
-            all_data.append(np.array([(relative_close_prices[pair_symbol(pair)][index]-1) for pair in self.pairs]))
+            all_data.append(np.array([float(relative_close_prices[pair_symbol(pair)][index]-1) for pair in self.pairs]))
 
         #split 70%, 20%, 10%
         self.train_data = np.array(all_data[0:int(length_of_data*0.7)])
@@ -110,13 +167,17 @@ class Brain:
         self.normalized_train_data = (self.train_data - self.train_mean) / self.train_std
         self.normalized_validation_data = (self.validation_data - self.train_mean) / self.train_std
         self.normalized_test_data = (self.test_data - self.train_mean) / self.train_std
+        self.label_columns = [f'T+{x}' for x in range(1, self.OUT_STEPS + 1)]
+        self.columns = [pair_symbol(pair) for pair in self.pairs]
 
         self.window = WindowGenerator(input_width=self.IN_STEPS,
                                       label_width=self.OUT_STEPS,
                                       shift=self.OUT_STEPS,
-                                      train_df=self.normalized_train_data,
-                                      val_df=self.normalized_validation_data,
-                                      test_df=self.normalized_test_data)
+                                      train_df=self.train_df,
+                                      val_df=self.validation_df,
+                                      test_df=self.test_df,
+                                      label_columns=self.label_columns,
+        )
 
     def create_model(self):
         self.model = tf.keras.Sequential([
@@ -138,8 +199,8 @@ class Brain:
     def window(self, window):
         self._window = window
 
-    def window_plot(self):
-        self.window.plot()
+    #def window_plot(self):
+    #    self.window.plot()
 
     def compile_and_fit(self, patience=2, epochs=20):
         early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
@@ -151,8 +212,21 @@ class Brain:
                            metrics=[tf.metrics.MeanAbsoluteError()])
 
         self.history = self.model.fit(self.window.train, epochs=epochs,
-                                 validation_data=self.window.val,
-                                 callbacks=[early_stopping])
+                                      validation_data=self.window.val,
+                                      callbacks=[early_stopping])
+
+    @property
+    def train_df(self):
+        return pd.DataFrame(self.normalized_train_data, columns=self.columns)
+
+    @property
+    def validation_df(self):
+        return pd.DataFrame(self.normalized_validation_data, columns=self.columns)
+
+    @property
+    def test_df(self):
+        return pd.DataFrame(self.normalized_test_data, columns=self.columns)
+
 
 class Application:
 
