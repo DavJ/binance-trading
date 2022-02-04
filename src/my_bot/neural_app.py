@@ -125,10 +125,10 @@ class WindowGenerator():
 
 class Brain:
 
-    def __init__(self, units=64):
+    def __init__(self, units=128):
 
         self.N = 6     #2^N is number of samples for prediction
-        self.M = 2     #2^M is number of samples to predict
+        self.M = 3     #2^M is number of samples to predict
         self.IN_STEPS = 2 ** self.N
         self.OUT_STEPS = 2 ** self.M
         self.units = units
@@ -167,7 +167,7 @@ class Brain:
         self.normalized_train_data = (self.train_data - self.train_mean) / self.train_std
         self.normalized_validation_data = (self.validation_data - self.train_mean) / self.train_std
         self.normalized_test_data = (self.test_data - self.train_mean) / self.train_std
-        self.label_columns = [f'T+{x}' for x in range(1, self.OUT_STEPS + 1)]
+        #self.label_columns = [f'T+{x}' for x in range(1, self.OUT_STEPS + 1)]
         self.columns = [pair_symbol(pair) for pair in self.pairs]
 
         self.window = WindowGenerator(input_width=self.IN_STEPS,
@@ -175,20 +175,21 @@ class Brain:
                                       shift=self.OUT_STEPS,
                                       train_df=self.train_df,
                                       val_df=self.validation_df,
-                                      test_df=self.test_df,
-                                      label_columns=self.label_columns,
+                                      test_df=self.test_df
         )
 
     def create_model(self):
+        num_features = 1
         self.model = tf.keras.Sequential([
             # Shape [batch, time, features] => [batch, lstm_units].
             # Adding more `lstm_units` just overfits more quickly.
             tf.keras.layers.LSTM(self.units, return_sequences=False),
             # Shape => [batch, out_steps*features].
-            tf.keras.layers.Dense(self.OUT_STEPS * self.num_features * self.num_pairs,
+            tf.keras.layers.Dense(self.OUT_STEPS * num_features * self.num_pairs,
                                   kernel_initializer=tf.initializers.zeros()),
             # Shape => [batch, out_steps, features].
-            tf.keras.layers.Reshape([self.OUT_STEPS, self.num_pairs, self.num_features])
+            #tf.keras.layers.Reshape([self.OUT_STEPS, self.num_pairs, self.num_features])
+            tf.keras.layers.Reshape([self.OUT_STEPS, self.num_pairs])
         ])
 
     @property
@@ -202,8 +203,8 @@ class Brain:
     #def window_plot(self):
     #    self.window.plot()
 
-    def compile_and_fit(self, patience=2, epochs=20):
-        early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
+    def compile_and_fit(self, patience=5, epochs=350):
+        early_stopping = tf.keras.callbacks.EarlyStopping(monitor='loss',
                                                           patience=patience,
                                                           mode='min')
 
@@ -243,7 +244,7 @@ class Application:
 
         brain = Brain()
         brain.create_model()
-        brain.window_plot()
+        #brain.window_plot()
         brain.compile_and_fit()
 
         while True:
