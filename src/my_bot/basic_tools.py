@@ -325,7 +325,7 @@ def get_close_price(pair, interval=Client.KLINE_INTERVAL_1HOUR, limit=500):
     olhvc_history = get_historical_klines(pair[0] + pair[1], limit=limit, interval=interval)
     return [sample[4] for sample in olhvc_history]
 
-def get_relative_close_price(pair, interval=Client.KLINE_INTERVAL_1HOUR, limit=500):
+def get_relative_close_price(pair, interval=Client.KLINE_INTERVAL_1HOUR, limit=1500):
     """
     refer to https://github.com/binance-us/binance-official-api-docs/blob/master/rest-api.md#klinecandlestick-data
     close_price has index 4

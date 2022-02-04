@@ -2,10 +2,6 @@
 https://www.tensorflow.org/tutorials/structured_data/time_series
 '''
 import os
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
-os.environ['TF_XLA_FLAGS'] = '--tf_xla_enable_xla_devices'
-#os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-#os.environ["SM_FRAMEWORK"] = "tf.keras"
 import asyncio
 import pandas as pd
 import numpy as np
@@ -150,15 +146,15 @@ class Brain:
             rcp = get_relative_close_price(pair)
             relative_close_prices.update(**{pair_symbol(pair): rcp})
 
-        all_data = []
+        self.all_data = []
         length_of_data = len(rcp)
         for index in range(length_of_data):
-            all_data.append(np.array([float(relative_close_prices[pair_symbol(pair)][index]-1) for pair in self.pairs]))
+            self.all_data.append(np.array([float(relative_close_prices[pair_symbol(pair)][index]-1) for pair in self.pairs]))
 
         #split 70%, 20%, 10%
-        self.train_data = np.array(all_data[0:int(length_of_data*0.7)])
-        self.validation_data = np.array(all_data[int(length_of_data*0.7): int(length_of_data*0.9)])
-        self.test_data = np.array(all_data[int(length_of_data*0.9):])
+        self.train_data = np.array(self.all_data[0:int(length_of_data*0.7)])
+        self.validation_data = np.array(self.all_data[int(length_of_data*0.7): int(length_of_data*0.9)])
+        self.test_data = np.array(self.all_data[int(length_of_data*0.9):])
         self.num_features = self.train_data.shape[1]
 
         self.train_mean = self.train_data.mean()
@@ -209,9 +205,6 @@ class Brain:
     def window(self, window):
         self._window = window
 
-    #def window_plot(self):
-    #    self.window.plot()
-
     def compile_and_fit(self, patience=5, epochs=250):
         early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
                                                           min_delta=0,
@@ -238,7 +231,6 @@ class Brain:
                                       #callbacks=[modelckpt_callback])
         self.model.summary()
 
-
     @property
     def train_df(self):
         return pd.DataFrame(self.normalized_train_data, columns=self.columns)
@@ -264,6 +256,29 @@ class Brain:
         plt.legend()
         plt.show()
 
+    def show_raw_visualization(self):
+        time_data = range(len(self.all_data))
+        fig, axes = plt.subplots(
+            nrows=7, ncols=2, figsize=(15, 20), dpi=80, facecolor="w", edgecolor="k"
+        )
+        colors = ["blue", "orange", "green", "red", "purple", "brown", "pink", "gray", "olive", "cyan",
+        ]
+
+        for i in range(len(self.columns)):
+            key = self.columns[i]
+            c = colors[i % (len(colors))]
+            t_data = pd.DataFrame([self.all_data[j][i] for j in time_data])
+            t_data.index = time_data
+            t_data.head()
+            ax = t_data.plot(
+                ax=axes[i // 2, i % 2],
+                color=c,
+                title="{} - {}".format(self.columns[i], key),
+                rot=25,
+            )
+            ax.legend([self.columns[i]])
+        plt.tight_layout()
+
 
 class Application:
 
@@ -280,6 +295,8 @@ class Application:
 
         brain = Brain()
         brain.create_model()
+
+        brain.show_raw_visualization()
         #brain.window_plot()
         brain.compile_and_fit()
         brain.visualize_loss()
