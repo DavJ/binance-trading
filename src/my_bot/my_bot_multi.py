@@ -1,7 +1,8 @@
 import asyncio
 from decimal import Decimal
 from basic_tools import (get_binance_client, CONFIGURATION, get_trading_currencies,
-                         round_down, TRADING_PAIRS, TRADING_CURRENCIES, cancel_obsolete_orders)
+                         round_down, TRADING_PAIRS, TRADING_CURRENCIES, cancel_obsolete_orders,
+                         get_average_buy_price_for_sell_quantity, get_average_sell_price_for_buy_quantity)
 from model.asset import Asset
 from model.ticker import Ticker
 from model.order_book import OrderBook
@@ -36,8 +37,11 @@ class Application:
 
     def main(self):
         while True:
-            self.update()
-            self.trade()
+            try:
+                self.update()
+                self.trade()
+            except Exception:
+                pass
 
             loop = asyncio.get_event_loop()
             loop.run_until_complete(asyncio.sleep(int(CONFIGURATION.SLEEP)))
@@ -120,18 +124,24 @@ class Application:
                 and statistix.average_price > buy_limit_price
                 and self.max_growth_predicted(currency) >= 0):
                     buy_amount = max(0, trade_asset.asset_amount_free*Decimal(CONFIGURATION.MAX_ASSET_FRACTION) / buy_limit_price)
-                    self.active_orders.append(Order(side='BUY', currency=asset.currency, amount=buy_amount,
-                                                    limit_price=buy_limit_price, trade_currency=trade_currency))
+                    avg_sell_price = get_average_sell_price_for_buy_quantity(buy_amount, currency, trade_currency)
 
-                    update_assets([asset, trade_asset])
+                    if buy_limit_price <= Profit().profitable_buy_price_for_previous_sell_price(avg_sell_price):
+                        self.active_orders.append(Order(side='BUY', currency=asset.currency, amount=buy_amount,
+                                                  limit_price=buy_limit_price, trade_currency=trade_currency))
+
+                        update_assets([asset, trade_asset])
 
             sell_limit_price = order_book.strategical_selling_price
             if (asset.asset_amount_free > 0
                 and statistix.average_price < sell_limit_price
                 and self.min_drop_predicted(asset.currency) <= 0):
                    sell_amount = max(0, asset.asset_amount_free * Decimal(CONFIGURATION.MAX_ASSET_FRACTION))
-                   self.active_orders.append(Order(side='SELL', currency=asset.currency, amount=sell_amount,
-                                                   limit_price=sell_limit_price, trade_currency=trade_currency))
+                   avg_buy_price = get_average_buy_price_for_sell_quantity(sell_amount, currency, trade_currency)
+
+                   if sell_limit_price >= Profit().profitable_sell_price_for_previous_buy_price(avg_buy_price):
+                       self.active_orders.append(Order(side='SELL', currency=asset.currency, amount=sell_amount,
+                                                 limit_price=sell_limit_price, trade_currency=trade_currency))
 
                    update_assets([asset, trade_asset])
 
@@ -140,7 +150,22 @@ class Application:
     def cancel_old_orders(self):
         pass
 
+def full_stack():
+    import traceback, sys
+    exc = sys.exc_info()[0]
+    stack = traceback.extract_stack()[:-1]  # last one would be full_stack()
+    if exc is not None:  # i.e. an exception is present
+        del stack[-1]       # remove call of full_stack, the printed exception
+                            # will contain the caught exception caller instead
+    trc = 'Traceback (most recent call last):\n'
+    stackstr = trc + ''.join(traceback.format_list(stack))
+    if exc is not None:
+         stackstr += '  ' + traceback.format_exc().lstrip(trc)
+    return stackstr
 
 if __name__ == "__main__":
     application = Application()
-    application.main()
+    try:
+        application.main()
+    except:
+        full_stack()
