@@ -362,6 +362,7 @@ def get_normalized_close_price(pair):
     print(f'{pair} {len(olhvc_history)}')
     return [float(Decimal(olhvc_history[index][4])/Decimal(olhvc_history[index-1][4]) - 1) for index in range(1, len(olhvc_history))][-limit + throw_away_samples::]
 
+
 def pair_symbol(pair):
     return pair[0] + pair[1]
 
@@ -392,3 +393,4 @@ async def candle_stick_data():
 
 def get_normalized_close_prices():
     return {pair: get_normalized_close_price(pair[0] + pair[1]) for pair in get_main_currency_pairs()}
+
