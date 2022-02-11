@@ -62,7 +62,7 @@ class Application:
         for _, statistix in self.statistixes.items():
             statistix.update()
 
-        self.relative_prices = get_normalized_close_prices()
+        self.kalman_filter.update()
 
     def price_prediction(self, currency):
         """
@@ -99,17 +99,11 @@ class Application:
                 asset.get_balance()
                 asset.update_last_trades()
 
-        pre_sorted_order_books = [order_book for _, order_book in self.order_books.items() if order_book.avg_price_relative_difference is not None]
-
-        sorted_order_books = sorted(pre_sorted_order_books, key=lambda x: x.min_price_relative_difference, reverse=True)
-
         #might change slightly during algorithm due to async refresh of assets, but approximate value is OK
         total_asset_amount_in_main_currency = sum([asset.asset_amount_in_main_currency_market
                                                    for currency, asset in self.assets.items()])
 
         print(f'\n\nCurrently having approximately {total_asset_amount_in_main_currency} {CONFIGURATION.MAIN_CURRENCY} in total.\n\n')
-
-        self.kalman_filter.update()
 
         cancel_obsolete_orders()
 
