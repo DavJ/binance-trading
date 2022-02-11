@@ -374,7 +374,8 @@ def get_normalized_close_prices(pairs=get_trading_pairs(), interval=Client.KLINE
 
 async def get_normalized_close_prices_async(pairs=get_trading_pairs(), interval=Client.KLINE_INTERVAL_15MINUTE, limit=500):
     async_client = await get_async_binance_client()
-    results = [await get_relative_close_price_async(pair, interval=interval, limit=limit, async_client=async_client) for pair in pairs]
+    results = [await get_relative_close_price_async(pair, interval=interval, limit=limit, async_client=async_client)
+               for pair in pairs]
     await async_client.close_connection()
     return np.array(results)
 

@@ -12,6 +12,11 @@ from src.my_bot.basic_tools import (Client, CONFIGURATION, get_binance_client, g
                                     use_async_client, get_async_web_socket_manager, get_threaded_web_socket_manager,
                                     get_trading_pairs, get_normalized_close_prices_async)
 
+from logging import getLogger as get_logger
+
+logger = get_logger('Kalman2')
+
+
 class Kalman2:
 
     def __init__(self, trading_pairs=get_trading_pairs(), state_multiple=1):
@@ -29,13 +34,13 @@ class Kalman2:
 
     def update(self):
         INTERVAL = Client.KLINE_INTERVAL_1HOUR
-        print('getting measurements ...')
-        self.measurements = np.transpose(asyncio.run(get_normalized_close_prices_async(pairs=self.trading_pair,
+        logger.info('getting measurements ...')
+        self.measurements = np.transpose(asyncio.run(get_normalized_close_prices_async(pairs=self.trading_pairs,
                                                                                        interval=INTERVAL)))
 
-        print('smoothing data ...')
+        logger.info('smoothing data ...')
         self.results_smoothed = self.kf.em(self.measurements, n_iter=5).smooth(self.measurements)[0]
-        print('smoothing finished...')
+        logger.info('smoothing finished...')
 
     def predict_values(self):
        """
@@ -48,7 +53,6 @@ class Kalman2:
     @property
     def sorted_predictions(self):
        """
-
        :return:
        """
        return sorted([(self.trading_pairs[i], 100*self.results_smoothed[i]) for i in range(self.n_dim_obs)],

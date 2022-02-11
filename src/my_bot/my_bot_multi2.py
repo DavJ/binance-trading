@@ -15,6 +15,9 @@ from time import sleep
 from datetime import datetime
 from model.kalman2 import Kalman2
 import math
+from logging import getLogger as get_logger
+
+logger =  get_logger('Application')
 
 class Application:
 
@@ -48,8 +51,8 @@ class Application:
             except Exception:
                 pass
 
-            loop = asyncio.get_event_loop()
-            loop.run_until_complete(asyncio.sleep(int(CONFIGURATION.SLEEP)))
+            #loop = asyncio.get_event_loop()
+            #loop.run_until_complete(asyncio.sleep(int(CONFIGURATION.SLEEP)))
 
     def update(self):
         for _, asset in self.assets.items():
@@ -103,7 +106,7 @@ class Application:
         total_asset_amount_in_main_currency = sum([asset.asset_amount_in_main_currency_market
                                                    for currency, asset in self.assets.items()])
 
-        print(f'\n\nCurrently having approximately {total_asset_amount_in_main_currency} {CONFIGURATION.MAIN_CURRENCY} in total.\n\n')
+        logger.info(f'\n\nCurrently having approximately {total_asset_amount_in_main_currency} {CONFIGURATION.MAIN_CURRENCY} in total.\n\n')
 
         cancel_obsolete_orders()
 
@@ -149,13 +152,14 @@ class Application:
 
                    update_assets([asset, trade_asset])
 
-        print(f'trading iteration finished  at {datetime.now().isoformat()}\n\n')
+        logger.info(f'trading iteration finished  at {datetime.now().isoformat()}\n\n')
 
     def cancel_old_orders(self):
         pass
 
 def full_stack():
-    import traceback, sys
+    import traceback
+    import sys
     exc = sys.exc_info()[0]
     stack = traceback.extract_stack()[:-1]  # last one would be full_stack()
     if exc is not None:  # i.e. an exception is present
