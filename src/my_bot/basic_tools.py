@@ -1,3 +1,5 @@
+import asyncio
+import websockets
 from decimal import Decimal
 import os
 import sys
@@ -72,7 +74,7 @@ def get_exchange_info():
 def get_trading_pairs():
     pairs = []
     trading_currencies = get_trading_currencies()
-    trading_symbols = {s['symbol'] for s in get_exchange_info()['symbols']}
+    trading_symbols = {s['symbol'] for s in get_exchange_info()['symbols'] if s['status'] == 'TRADING'}
     for currency1 in trading_currencies:
         for currency2 in trading_currencies:
             if currency1 + currency2 in trading_symbols:
@@ -314,6 +316,20 @@ def get_historical_klines(pair, limit=500, interval=Client.KLINE_INTERVAL_1HOUR)
                                         start_str=start_timestamp, #limit=limit,
                                         klines_type=HistoricalKlinesType.SPOT)
 
+async def get_historical_klines_async(pair, limit=500, interval=Client.KLINE_INTERVAL_15MINUTE, async_client=None):
+    delta_unit = (timedelta(minutes=15) if interval == Client.KLINE_INTERVAL_15MINUTE
+                  else timedelta(minutes=1) if interval == Client.KLINE_INTERVAL_1MINUTE
+                  else timedelta(minutes=60) if interval == Client.KLINE_INTERVAL_1HOUR
+                  else None)
+
+    start_timestamp = int((datetime.now() - delta_unit*limit).timestamp()*1000)
+    results = await async_client.get_historical_klines(symbol=pair, interval=interval,
+                                                       start_str=start_timestamp, #limit=limit,
+                                                       klines_type=HistoricalKlinesType.SPOT)
+
+    #await client.close_connection()
+    return results
+
 def normalize_rate(past_rate, current_rate, scale=1):
     return 2*math.atan(scale*(Decimal(past_rate)/Decimal(current_rate) - 1))/math.pi
 
@@ -331,6 +347,9 @@ def get_relative_close_price(pair, interval=Client.KLINE_INTERVAL_1HOUR, limit=1
     close_price has index 4
     """
     olhvc_history = get_historical_klines(pair[0] + pair[1], limit=limit, interval=interval)
+    return [float(Decimal(olhvc_history[index][4])/Decimal(olhvc_history[index-1][4]) - 1) for index in range(1, len(olhvc_history))]
+
+async def get_relative_close_price_async(pair, interval=Client.KLINE_INTERVAL_15MINUTE, limit=500, async_client=None):
     return [Decimal(olhvc_history[index][4])/Decimal(olhvc_history[index-1][4]) for index in range(1, len(olhvc_history))]
 
 def get_normalized_close_price(pair):
@@ -338,6 +357,41 @@ def get_normalized_close_price(pair):
     refer to https://github.com/binance-us/binance-official-api-docs/blob/master/rest-api.md#klinecandlestick-data
     close_price has index 4
     """
+    throw_away_samples = 2
+    olhvc_history = await get_historical_klines_async(pair[0] + pair[1], limit=limit, interval=interval, async_client=async_client)
+    print(f'{pair} {len(olhvc_history)}')
+    return [float(Decimal(olhvc_history[index][4])/Decimal(olhvc_history[index-1][4]) - 1) for index in range(1, len(olhvc_history))][-limit + throw_away_samples::]
+
+def pair_symbol(pair):
+    return pair[0] + pair[1]
+
+def get_normalized_close_prices(pairs=get_trading_pairs(), interval=Client.KLINE_INTERVAL_15MINUTE, limit=500, as_dict=True):
+    if as_dict:
+        return {pair_symbol(pair): get_relative_close_price(pair, interval=interval, limit=limit) for pair in pairs}
+    else:
+        ll = [get_relative_close_price(pair, interval=interval, limit=limit) for pair in pairs]
+        return np.array(ll)
+
+async def get_normalized_close_prices_async(pairs=get_trading_pairs(), interval=Client.KLINE_INTERVAL_15MINUTE, limit=500):
+    async_client = await get_async_binance_client()
+    results = [await get_relative_close_price_async(pair, interval=interval, limit=limit, async_client=async_client) for pair in pairs]
+    await async_client.close_connection()
+    return np.array(results)
+
+async def candle_stick_data():
+    url = "wss://stream.binance.com:9443/ws/" #steam address
+    first_pair = 'bnbbtc@kline_1m' #first pair
+    async with websockets.connect(url+first_pair) as sock:
+        pairs = '{"method": "SUBSCRIBE", "params": ["xrpbtc@kline_1m","ethbtc@kline_1m" ],  "id": 1}' #other pairs
+
+        await sock.send(pairs)
+        print(f"> {pairs}")
+        while True:
+            resp = await sock.recv()
+            print(f"< {resp}")
+
+def get_klines_async():
+    asyncio.get_event_loop().run_until_complete(candle_stick_data())
     scale = 10
     olhvc_history = get_historical_klines(pair[0] + pair[1])
     return [normalize_past_rate(sample[4], olhvc_history[-1][4], scale) for sample in olhvc_history]
@@ -355,3 +409,4 @@ def get_normalized_close_price_train_data_by_pairs():
 
 def get_normalized_close_prices():
     return {pair: get_normalized_close_price(pair[0] + pair[1]) for pair in get_main_currency_pairs()}
+
