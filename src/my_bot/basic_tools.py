@@ -362,6 +362,7 @@ def get_normalized_close_price(pair):
     print(f'{pair} {len(olhvc_history)}')
     return [float(Decimal(olhvc_history[index][4])/Decimal(olhvc_history[index-1][4]) - 1) for index in range(1, len(olhvc_history))][-limit + throw_away_samples::]
 
+
 def pair_symbol(pair):
     return pair[0] + pair[1]
 
@@ -389,23 +390,6 @@ async def candle_stick_data():
         while True:
             resp = await sock.recv()
             print(f"< {resp}")
-
-def get_klines_async():
-    asyncio.get_event_loop().run_until_complete(candle_stick_data())
-    scale = 10
-    olhvc_history = get_historical_klines(pair[0] + pair[1])
-    return [normalize_past_rate(sample[4], olhvc_history[-1][4], scale) for sample in olhvc_history]
-
-def get_normalized_close_price_train_data_for_pair(pair):
-    M, N = 5, 5   #N ... split to chunks of length 2^N, M .... predict exponent
-    cp = get_normalized_close_price(pair)
-    train_data = [[cp[i + k**2 - j**2] for k in range(M) for j in range(N)] for i in range(2**N, len(cp) - 2**M)] #TODO looks wrong
-    #train_data = [[cp[i + k ** 2 - j ** 2] for k in range(M) for j in range(N)] for i inrange(2 ** N, len(cp) - 2 ** M)]
-
-    return np.array(train_data)
-
-def get_normalized_close_price_train_data_by_pairs():
-    return {pair: get_normalized_close_price_train_data_for_pair(pair[0] + pair[1]) for pair in get_main_currency_pairs()}
 
 def get_normalized_close_prices():
     return {pair: get_normalized_close_price(pair[0] + pair[1]) for pair in get_main_currency_pairs()}
