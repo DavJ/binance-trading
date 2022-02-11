@@ -12,7 +12,6 @@ from functools import reduce
 from datetime import datetime, timedelta
 import numpy as np
 from binance.enums import HistoricalKlinesType
-
 from binance.exceptions import BinanceAPIException
 
 INI_FILE = os.path.dirname(os.path.realpath(__file__)) + '/settings.ini'
@@ -310,7 +309,7 @@ def cancel_obsolete_orders():
         client.cancel_order(symbol=obsolete_order[0], orderId=obsolete_order[1])
         print(f'Cancelling order {obsolete_order}')
 
-def get_historical_klines(pair, limit=500, interval=Client.KLINE_INTERVAL_15MINUTE):
+def get_historical_klines(pair, limit=500, interval=Client.KLINE_INTERVAL_1HOUR):
     client = get_binance_client()
     start_timestamp = int((datetime.now() - timedelta(minutes=15*limit)).timestamp()*1000)
     return client.get_historical_klines(symbol=pair, interval=interval,
@@ -342,7 +341,7 @@ def get_close_price(pair, interval=Client.KLINE_INTERVAL_1HOUR, limit=500):
     olhvc_history = get_historical_klines(pair[0] + pair[1], limit=limit, interval=interval)
     return [sample[4] for sample in olhvc_history]
 
-def get_relative_close_price(pair, interval=Client.KLINE_INTERVAL_15MINUTE, limit=1000):
+def get_relative_close_price(pair, interval=Client.KLINE_INTERVAL_1HOUR, limit=1500):
     """
     refer to https://github.com/binance-us/binance-official-api-docs/blob/master/rest-api.md#klinecandlestick-data
     close_price has index 4
@@ -351,6 +350,9 @@ def get_relative_close_price(pair, interval=Client.KLINE_INTERVAL_15MINUTE, limi
     return [float(Decimal(olhvc_history[index][4])/Decimal(olhvc_history[index-1][4]) - 1) for index in range(1, len(olhvc_history))]
 
 async def get_relative_close_price_async(pair, interval=Client.KLINE_INTERVAL_15MINUTE, limit=500, async_client=None):
+    return [Decimal(olhvc_history[index][4])/Decimal(olhvc_history[index-1][4]) for index in range(1, len(olhvc_history))]
+
+def get_normalized_close_price(pair):
     """
     refer to https://github.com/binance-us/binance-official-api-docs/blob/master/rest-api.md#klinecandlestick-data
     close_price has index 4
@@ -390,3 +392,21 @@ async def candle_stick_data():
 
 def get_klines_async():
     asyncio.get_event_loop().run_until_complete(candle_stick_data())
+    scale = 10
+    olhvc_history = get_historical_klines(pair[0] + pair[1])
+    return [normalize_past_rate(sample[4], olhvc_history[-1][4], scale) for sample in olhvc_history]
+
+def get_normalized_close_price_train_data_for_pair(pair):
+    M, N = 5, 5   #N ... split to chunks of length 2^N, M .... predict exponent
+    cp = get_normalized_close_price(pair)
+    train_data = [[cp[i + k**2 - j**2] for k in range(M) for j in range(N)] for i in range(2**N, len(cp) - 2**M)] #TODO looks wrong
+    #train_data = [[cp[i + k ** 2 - j ** 2] for k in range(M) for j in range(N)] for i inrange(2 ** N, len(cp) - 2 ** M)]
+
+    return np.array(train_data)
+
+def get_normalized_close_price_train_data_by_pairs():
+    return {pair: get_normalized_close_price_train_data_for_pair(pair[0] + pair[1]) for pair in get_main_currency_pairs()}
+
+def get_normalized_close_prices():
+    return {pair: get_normalized_close_price(pair[0] + pair[1]) for pair in get_main_currency_pairs()}
+
