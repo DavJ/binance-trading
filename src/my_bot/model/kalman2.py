@@ -28,9 +28,10 @@ class Kalman2:
         return f"Kalman2(trading_pairs={self.trading_pairs}, state_multiple={self.state_multiple})"
 
     def update(self):
-        INTERVAL=Client.KLINE_INTERVAL_1HOUR
+        INTERVAL = Client.KLINE_INTERVAL_1HOUR
         print('getting measurements ...')
-        self.measurements = np.transpose(asyncio.run(get_normalized_close_prices_async(pairs=self.trading_pairs, interval=INTERVAL)))
+        self.measurements = np.transpose(asyncio.run(get_normalized_close_prices_async(pairs=self.trading_pair,
+                                                                                       interval=INTERVAL)))
 
         print('smoothing data ...')
         self.results_smoothed = self.kf.em(self.measurements, n_iter=5).smooth(self.measurements)[0]
