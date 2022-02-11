@@ -349,19 +349,17 @@ def get_relative_close_price(pair, interval=Client.KLINE_INTERVAL_1HOUR, limit=1
     olhvc_history = get_historical_klines(pair[0] + pair[1], limit=limit, interval=interval)
     return [float(Decimal(olhvc_history[index][4])/Decimal(olhvc_history[index-1][4]) - 1) for index in range(1, len(olhvc_history))]
 
-async def get_relative_close_price_async(pair, interval=Client.KLINE_INTERVAL_15MINUTE, limit=500, async_client=None):
-    return [Decimal(olhvc_history[index][4])/Decimal(olhvc_history[index-1][4]) for index in range(1, len(olhvc_history))]
-
-def get_normalized_close_price(pair):
+async def get_relative_close_price_async(pair, interval=Client.KLINE_INTERVAL_1HOUR, limit=500, async_client=None):
     """
     refer to https://github.com/binance-us/binance-official-api-docs/blob/master/rest-api.md#klinecandlestick-data
     close_price has index 4
     """
     throw_away_samples = 2
-    olhvc_history = await get_historical_klines_async(pair[0] + pair[1], limit=limit, interval=interval, async_client=async_client)
+    olhvc_history = await get_historical_klines_async(pair[0] + pair[1], limit=limit, interval=interval,
+                                                      async_client=async_client)
     print(f'{pair} {len(olhvc_history)}')
-    return [float(Decimal(olhvc_history[index][4])/Decimal(olhvc_history[index-1][4]) - 1) for index in range(1, len(olhvc_history))][-limit + throw_away_samples::]
-
+    return [float(Decimal(olhvc_history[index][4])/Decimal(olhvc_history[index-1][4]) - 1)
+            for index in range(1, len(olhvc_history))][-limit + throw_away_samples::]
 
 def pair_symbol(pair):
     return pair[0] + pair[1]
@@ -372,6 +370,7 @@ def get_normalized_close_prices(pairs=get_trading_pairs(), interval=Client.KLINE
     else:
         ll = [get_relative_close_price(pair, interval=interval, limit=limit) for pair in pairs]
         return np.array(ll)
+
 
 async def get_normalized_close_prices_async(pairs=get_trading_pairs(), interval=Client.KLINE_INTERVAL_15MINUTE, limit=500):
     async_client = await get_async_binance_client()
@@ -390,7 +389,3 @@ async def candle_stick_data():
         while True:
             resp = await sock.recv()
             print(f"< {resp}")
-
-def get_normalized_close_prices():
-    return {pair: get_normalized_close_price(pair[0] + pair[1]) for pair in get_main_currency_pairs()}
-
