@@ -112,7 +112,7 @@ class Application:
         #mutual algorithm
         for prediction in self.kalman_filter.sorted_predictions:
 
-            if abs(prediction[1]) < CONFIGURATION.VOLATILITY_COEFICIENT:
+            if abs(prediction[1]) < float(CONFIGURATION.VOLATILITY_COEFICIENT):
                 break
 
             currency = prediction[0][0]
