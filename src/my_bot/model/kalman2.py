@@ -10,9 +10,9 @@ from pykalman import KalmanFilter
 
 from src.my_bot.basic_tools import (Client, CONFIGURATION, get_binance_client, get_async_binance_client,
                                     use_async_client, get_async_web_socket_manager, get_threaded_web_socket_manager,
-                                    get_trading_pairs, get_normalized_close_prices_async)
+                                    get_trading_pairs, get_normalized_close_prices_async ,get_logger)
 
-from logging import getLogger as get_logger
+import logging
 
 logger = get_logger('Kalman2')
 

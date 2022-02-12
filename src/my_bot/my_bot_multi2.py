@@ -3,7 +3,7 @@ from decimal import Decimal
 from basic_tools import (get_binance_client, CONFIGURATION, get_trading_currencies,
                          round_down, TRADING_PAIRS, TRADING_CURRENCIES, cancel_obsolete_orders,
                          get_average_buy_price_for_sell_quantity, get_average_sell_price_for_buy_quantity,
-                         get_normalized_close_prices, pair_symbol)
+                         get_normalized_close_prices, pair_symbol, get_logger)
 from model.asset import Asset
 from model.ticker import Ticker
 from model.order_book import OrderBook
@@ -15,9 +15,8 @@ from time import sleep
 from datetime import datetime
 from model.kalman2 import Kalman2
 import math
-from logging import getLogger as get_logger
 
-logger =  get_logger('Application')
+logger = get_logger('Application')
 
 class Application:
 

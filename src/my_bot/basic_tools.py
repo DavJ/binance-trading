@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 import numpy as np
 from binance.enums import HistoricalKlinesType
 from binance.exceptions import BinanceAPIException
+import logging
 
 INI_FILE = os.path.dirname(os.path.realpath(__file__)) + '/settings.ini'
 
@@ -390,3 +391,28 @@ async def candle_stick_data():
         while True:
             resp = await sock.recv()
             print(f"< {resp}")
+
+def get_logger(logger_name, create_file=False):
+        # create logger for prd_ci
+        log = logging.getLogger(logger_name)
+        log.setLevel(level=logging.INFO)
+
+        # create formatter and add it to the handlers
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+        if create_file:
+            # create file handler for logger.
+            fh = logging.FileHandler('SPOT.log')
+            fh.setLevel(level=logging.DEBUG)
+            fh.setFormatter(formatter)
+        # reate console handler for logger.
+        ch = logging.StreamHandler()
+        ch.setLevel(level=logging.DEBUG)
+        ch.setFormatter(formatter)
+
+        # add handlers to logger.
+        if create_file:
+            log.addHandler(fh)
+
+        log.addHandler(ch)
+        return log
