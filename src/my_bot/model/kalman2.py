@@ -55,7 +55,7 @@ class Kalman2:
        """
        :return:
        """
-       return sorted([(self.trading_pairs[i], 100*self.results_smoothed[i]) for i in range(self.n_dim_obs)],
+       return sorted([(self.trading_pairs[i], 100*self.results_smoothed[0][i]) for i in range(self.n_dim_obs)],
                      key=lambda x: abs(x[1]), reverse=True)
 
     def dump_sorted(self):
