@@ -358,7 +358,7 @@ def get_normalized_close_price(pair):
     close_price has index 4
     """
     throw_away_samples = 2
-    olhvc_history = await get_historical_klines_async(pair[0] + pair[1], limit=limit, interval=interval, async_client=async_client)
+    olhvc_history = get_historical_klines_async(pair[0] + pair[1], limit=limit, interval=interval, async_client=async_client)
     print(f'{pair} {len(olhvc_history)}')
     return [float(Decimal(olhvc_history[index][4])/Decimal(olhvc_history[index-1][4]) - 1) for index in range(1, len(olhvc_history))][-limit + throw_away_samples::]
 
