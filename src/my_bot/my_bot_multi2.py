@@ -3,7 +3,7 @@ from decimal import Decimal
 from basic_tools import (get_binance_client, CONFIGURATION, get_trading_currencies,
                          round_down, TRADING_PAIRS, TRADING_CURRENCIES, cancel_obsolete_orders,
                          get_average_buy_price_for_sell_quantity, get_average_sell_price_for_buy_quantity,
-                         get_normalized_close_prices, pair_symbol)
+                         get_normalized_close_prices, pair_symbol, get_logger)
 from model.asset import Asset
 from model.ticker import Ticker
 from model.order_book import OrderBook
@@ -15,6 +15,8 @@ from time import sleep
 from datetime import datetime
 from model.kalman2 import Kalman2
 import math
+
+logger = get_logger('Application')
 
 class Application:
 
@@ -48,8 +50,8 @@ class Application:
             except Exception:
                 pass
 
-            loop = asyncio.get_event_loop()
-            loop.run_until_complete(asyncio.sleep(int(CONFIGURATION.SLEEP)))
+            #loop = asyncio.get_event_loop()
+            #loop.run_until_complete(asyncio.sleep(int(CONFIGURATION.SLEEP)))
 
     def update(self):
         for _, asset in self.assets.items():
@@ -62,7 +64,7 @@ class Application:
         for _, statistix in self.statistixes.items():
             statistix.update()
 
-        self.relative_prices = get_normalized_close_prices()
+        self.kalman_filter.update()
 
     def price_prediction(self, currency):
         """
@@ -99,24 +101,18 @@ class Application:
                 asset.get_balance()
                 asset.update_last_trades()
 
-        pre_sorted_order_books = [order_book for _, order_book in self.order_books.items() if order_book.avg_price_relative_difference is not None]
-
-        sorted_order_books = sorted(pre_sorted_order_books, key=lambda x: x.min_price_relative_difference, reverse=True)
-
         #might change slightly during algorithm due to async refresh of assets, but approximate value is OK
         total_asset_amount_in_main_currency = sum([asset.asset_amount_in_main_currency_market
                                                    for currency, asset in self.assets.items()])
 
-        print(f'\n\nCurrently having approximately {total_asset_amount_in_main_currency} {CONFIGURATION.MAIN_CURRENCY} in total.\n\n')
-
-        self.kalman_filter.update()
+        logger.info(f'\n\nCurrently having approximately {total_asset_amount_in_main_currency} {CONFIGURATION.MAIN_CURRENCY} in total.\n\n')
 
         cancel_obsolete_orders()
 
         #mutual algorithm
         for prediction in self.kalman_filter.sorted_predictions:
 
-            if abs(prediction[1]) < CONFIGURATION.VOLATILITY_COEFICIENT:
+            if abs(prediction[1]) < float(CONFIGURATION.VOLATILITY_COEFICIENT):
                 break
 
             currency = prediction[0][0]
@@ -132,7 +128,8 @@ class Application:
             buy_limit_price = order_book.strategical_buying_price
             if (trade_asset.asset_amount_free > 0
                 and statistix.average_price > buy_limit_price
-                and self.max_growth_predicted(currency) >= 0):
+                and prediction[1] > 0):
+                #and self.max_growth_predicted(currency) >= 0):
                     buy_amount = max(0, trade_asset.asset_amount_free*Decimal(CONFIGURATION.MAX_ASSET_FRACTION) / buy_limit_price)
                     avg_sell_price = get_average_sell_price_for_buy_quantity(buy_amount, currency, trade_currency)
 
@@ -145,7 +142,8 @@ class Application:
             sell_limit_price = order_book.strategical_selling_price
             if (asset.asset_amount_free > 0
                 and statistix.average_price < sell_limit_price
-                and self.min_drop_predicted(asset.currency) <= 0):
+                #and self.min_drop_predicted(asset.currency) <= 0):
+                and prediction[1] < 0):
                    sell_amount = max(0, asset.asset_amount_free * Decimal(CONFIGURATION.MAX_ASSET_FRACTION))
                    avg_buy_price = get_average_buy_price_for_sell_quantity(sell_amount, currency, trade_currency)
 
@@ -155,13 +153,14 @@ class Application:
 
                    update_assets([asset, trade_asset])
 
-        print(f'trading iteration finished  at {datetime.now().isoformat()}\n\n')
+        logger.info(f'trading iteration finished  at {datetime.now().isoformat()}\n\n')
 
     def cancel_old_orders(self):
         pass
 
 def full_stack():
-    import traceback, sys
+    import traceback
+    import sys
     exc = sys.exc_info()[0]
     stack = traceback.extract_stack()[:-1]  # last one would be full_stack()
     if exc is not None:  # i.e. an exception is present

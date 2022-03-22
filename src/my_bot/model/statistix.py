@@ -9,11 +9,11 @@ import operator
 import statistics
 
 from binance import Client
-from src.my_bot.basic_tools import (CONFIGURATION, get_binance_client, get_async_binance_client,
+from basic_tools import (CONFIGURATION, get_binance_client, get_async_binance_client,
                                     use_async_client, get_async_web_socket_manager, get_threaded_web_socket_manager)
 
-from src.my_bot.model.ticker import Ticker
-from src.my_bot.model.order_book import OrderBook
+from model.ticker import Ticker
+from model.order_book import OrderBook
 
 class Statistix:
 

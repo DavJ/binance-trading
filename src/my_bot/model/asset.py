@@ -5,12 +5,12 @@ import asyncio
 import datetime
 import aiosqlite
 import json
-from src.my_bot.model.statistix import Statistix
+from model.statistix import Statistix
 from binance.exceptions import BinanceAPIException
 
 
-from src.my_bot.basic_tools import (CONFIGURATION, get_binance_client, get_async_binance_client,
-                                    ilen, get_order_book_statistics, TRADING_PAIRS, use_async_client)
+from basic_tools import (CONFIGURATION, get_binance_client, get_async_binance_client,
+                         ilen, get_order_book_statistics, TRADING_PAIRS, use_async_client)
 
 
 

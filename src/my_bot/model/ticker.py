@@ -6,10 +6,10 @@ import datetime
 import aiosqlite
 import json
 
-from src.my_bot.basic_tools import (CONFIGURATION, get_binance_client, get_async_binance_client,
+from basic_tools import (CONFIGURATION, get_binance_client, get_async_binance_client,
                                     use_async_client, get_async_web_socket_manager, get_threaded_web_socket_manager)
-from src.my_bot.model.kalman import Kalman
-from src.my_bot.model.chart import Chart
+from model.kalman import Kalman
+from model.chart import Chart
 
 class Ticker:
 
