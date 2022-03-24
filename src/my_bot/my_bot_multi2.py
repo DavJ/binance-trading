@@ -112,8 +112,8 @@ class Application:
         #mutual algorithm
         for prediction in self.kalman_filter.sorted_predictions:
 
-            if abs(prediction[1]) < float(CONFIGURATION.VOLATILITY_COEFICIENT):
-                break
+            if abs(prediction[1]) < float(CONFIGURATION.VOLATILITY_COEFICIENT)/100:
+                continue       #skip this crypto currency and continue with other one if expected change is too small
 
             currency = prediction[0][0]
             trade_currency = prediction[0][1]
