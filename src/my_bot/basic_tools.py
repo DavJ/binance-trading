@@ -26,7 +26,8 @@ class Configuration:
                           'BUY_FEE', 'SELL_FEE', 'BUY_PROFIT', 'SELL_PROFIT', 'BUY_STRATEGY', 'SELL_STRATEGY',
                           'DB_FILE', 'USE_ASYNC_CLIENT', 'MAX_ASSET_FRACTION', 'SLEEP',
                           'BUY_DAILY_CHANGER', 'SELL_DAILY_CHANGER', 'SELL_IMMEDIATELY',
-                          'PLACE_BUY_ORDER_ONLY_IF_PRICE_MATCHES', 'ORDER_VALIDITY', 'VOLATILITY_COEFICIENT']:
+                          'PLACE_BUY_ORDER_ONLY_IF_PRICE_MATCHES', 'ORDER_VALIDITY', 'VOLATILITY_COEFICIENT',
+                          'SHOW_PLOT']:
             setattr(self, attribute, config(attribute))
 
 
@@ -361,7 +362,6 @@ async def get_relative_close_price_async(pair, interval=Client.KLINE_INTERVAL_1H
     print(f'{pair} {len(olhvc_history)}')
     return [float(Decimal(olhvc_history[index][4])/Decimal(olhvc_history[index-1][4]) - 1)
             for index in range(1, len(olhvc_history))][-limit + throw_away_samples::]
-
 
 def pair_symbol(pair):
     return pair[0] + pair[1]
