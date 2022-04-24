@@ -13,7 +13,7 @@ from model.order import Order
 from model.profit import Profit
 from time import sleep
 from datetime import datetime
-from model.kalman2 import Kalman2
+from model.kalman3 import Kalman3
 import math
 
 logger = get_logger('Application')
