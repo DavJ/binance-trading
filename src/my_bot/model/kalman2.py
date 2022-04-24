@@ -48,7 +48,7 @@ class Kalman2:
        :param dt:
        :return:
        """
-       return self.results_smoothed[0]
+       return self.results_smoothed[-1]
 
     @property
     def sorted_predictions(self):
