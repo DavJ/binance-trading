@@ -80,10 +80,10 @@ class Kalman3:
                return np.Infinity          #zero second derivative means min or max was reached => prioritize trade
 
        return sorted([(self.trading_pairs[i],
-                       self.results_smoothed[0][i], #average predicted
-                       self.results_smoothed[0][i + self.number_of_pairs],  #first derivative predicted
-                       self.results_smoothed[0][i + 2*self.number_of_pairs]  #second derivative predicted
-                       ) for i in range(self.n_dim_obs)],
+                       self.results_smoothed[-1][i], #average predicted
+                       self.results_smoothed[-1][i + self.number_of_pairs],  #first derivative predicted
+                       self.results_smoothed[-1][i + 2*self.number_of_pairs]  #second derivative predicted
+                       ) for i in range(self.number_of_pairs)],
                      key=sorting_criteria, reverse=True)
 
     def dump_sorted(self):
