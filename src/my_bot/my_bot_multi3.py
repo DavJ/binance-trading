@@ -132,7 +132,7 @@ class Application:
                 and statistix.average_price > buy_limit_price
                 #and self.max_growth_predicted(currency) >= 0
                 and prediction[1] > 0
-                and isclose(prediction[2], 0, abs_tol=5e-6)
+                and isclose(prediction[2], 0, abs_tol=1e-4)
                 and prediction[3] > 0):
                     buy_amount = max(0, trade_asset.asset_amount_free*Decimal(CONFIGURATION.MAX_ASSET_FRACTION) / buy_limit_price)
                     avg_sell_price = get_average_sell_price_for_buy_quantity(buy_amount, currency, trade_currency)
@@ -149,7 +149,7 @@ class Application:
                 and statistix.average_price < sell_limit_price
                 #and self.min_drop_predicted(asset.currency) <= 0
                 and prediction[1] < 0
-                and isclose(prediction[2], 0, abs_tol=5e-6)
+                and isclose(prediction[2], 0, abs_tol=1e-4)
                 and prediction[3] < 0):
                    sell_amount = max(0, asset.asset_amount_free * Decimal(CONFIGURATION.MAX_ASSET_FRACTION))
                    avg_buy_price = get_average_buy_price_for_sell_quantity(sell_amount, currency, trade_currency)
