@@ -18,7 +18,7 @@ from scipy import optimize
 
 import logging
 
-logger = get_logger('Kalman2')
+logger = get_logger('Kalman3')
 
 #see also https://github.com/pykalman/pykalman
 class Kalman3:
@@ -36,7 +36,7 @@ class Kalman3:
         self.number_of_derivations = number_of_derivations
 
     def __repr__(self):
-        return f"Kalman2(trading_pairs={self.trading_pairs}, state_multiple={self.state_multiple})"
+        return f"Kalman3(trading_pairs={self.trading_pairs}, state_multiple={self.state_multiple})"
 
     def update(self):
         INTERVAL = Client.KLINE_INTERVAL_1HOUR
@@ -52,9 +52,10 @@ class Kalman3:
                 derivative = np.diff(derivative, axis=0, prepend=0)
 
         logger.info('smoothing data ...')
-        self.results_smoothed = self.kf.em(self.measurements_plus_derivations, n_iter=10).smooth(self.measurements_plus_derivations)[0]
+        self.results_smoothed = self.kf.em(self.measurements_plus_derivations, n_iter=5).smooth(self.measurements_plus_derivations)[0]
         logger.info('smoothing finished...')
-        self.plot()
+        if eval(CONFIGURATION.SHOW_PLOT):
+            self.plot()
 
     def predict_values(self):
        """
@@ -73,8 +74,8 @@ class Kalman3:
        """
        def sorting_criteria(x):
            try:
-               return abs(x[1]*x[2]/x[3])  # bigger the difference from avg, bigger the change (first derivative) and
-                                           # smaller the second derivative (close to extreme) => prioritize trade
+               return abs(x[1]/x[2])  # bigger the difference from avg, smaller the change (first derivative)
+
            except ZeroDivisionError:
                return np.Infinity          #zero second derivative means min or max was reached => prioritize trade
 
@@ -91,13 +92,13 @@ class Kalman3:
            print(prediction)
 
     def plot(self):
-        DISPLAYED_DATA = 450
-        POLYNOME_ORDER = 9
+        DISPLAYED_DATA = 497
+        POLYNOME_ORDER = 100
         plt.title('Kalman filtering and smoothing')
         plt.xlabel('sequence number [15min intervals]')
         plt.xlabel('relative price')
         x = np.arange(0, np.shape(self.measurements)[0])[-DISPLAYED_DATA:]
-        xfit = np.arange(0, POLYNOME_ORDER)
+        xfit = np.arange(0, POLYNOME_ORDER + 1)
         y1 = np.transpose(self.measurements_plus_derivations)[0][-DISPLAYED_DATA:]  #original data
         y2 = np.transpose(self.results_smoothed)[0][-DISPLAYED_DATA:]  #smoothed
         y3 = np.transpose(self.results_smoothed)[0 + self.number_of_pairs][-DISPLAYED_DATA:] # smoothed derivation
@@ -107,20 +108,19 @@ class Kalman3:
         fig.suptitle('Kalman filtering')
 
         axs[0, 0].plot(x, y1, 'tab:blue')
-        axs[0, 0].plot(xfit, np.polyfit(x, y1, POLYNOME_ORDER), 'tab:cyan')
+        #axs[0, 0].plot(xfit, np.polyfit(x, y1, POLYNOME_ORDER), 'tab:cyan')
         axs[0, 0].set_title('original')
 
         axs[1, 0].plot(x, y2, 'tab:green')
-        axs[1, 0].plot(xfit, np.polyfit(x, y2, POLYNOME_ORDER), 'tab:cyan')
+        #axs[1, 0].plot(xfit, np.polyfit(x, y2, POLYNOME_ORDER), 'tab:cyan')
         axs[1, 0].set_title('filtered')
 
         axs[0, 1].plot(x, y3, 'tab:orange')
-        axs[0, 1].plot(xfit, np.polyfit(x, y3, POLYNOME_ORDER), 'tab:cyan')
+        #axs[0, 1].plot(xfit, np.polyfit(x, y3, POLYNOME_ORDER), 'tab:cyan')
         axs[0, 1].set_title('filtered derivation')
 
         axs[1, 1].plot(x, y4, 'tab:red')
-        axs[1, 1].plot(xfit, np.polyfit(x, y4, POLYNOME_ORDER), 'tab:cyan')
+        #axs[1, 1].plot(xfit, np.polyfit(x, y4, POLYNOME_ORDER), 'tab:cyan')
         axs[1, 1].set_title('filtered second derivation')
 
         plt.show()
-        pass

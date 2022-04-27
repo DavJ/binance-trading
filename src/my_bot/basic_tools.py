@@ -379,7 +379,7 @@ async def get_normalized_close_prices_async(pairs=get_trading_pairs(), interval=
     results = [await get_relative_close_price_async(pair, interval=interval, limit=limit, async_client=async_client)
                for pair in pairs]
     await async_client.close_connection()
-    return np.array(results)
+    return np.array(results, dtype=np.float32)
 
 async def candle_stick_data():
     url = "wss://stream.binance.com:9443/ws/" #steam address
