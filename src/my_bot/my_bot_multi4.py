@@ -17,6 +17,7 @@ from model.kalman3 import Kalman3
 from math import isclose
 
 logger = get_logger('Application')
+BUSD_TRADING_PAIRS = [pair for pair in TRADING_PAIRS if pair[1] == 'BUSD']
 
 class Application:
 
@@ -34,13 +35,13 @@ class Application:
         self.assets = {currency: Asset(currency=currency) for currency in TRADING_CURRENCIES}
 
         self.order_books = {curr1 + curr2: OrderBook(currency=curr1, trade_currency=curr2)
-                            for curr1, curr2 in TRADING_PAIRS}
+                            for curr1, curr2 in BUSD_TRADING_PAIRS}
 
         self.statistixes = {curr1 + curr2: Statistix(currency=curr1, trade_currency=curr2)
-                            for curr1, curr2 in TRADING_PAIRS}
+                            for curr1, curr2 in BUSD_TRADING_PAIRS}
         self.relative_prices = None
 
-        self.kalman_filter = Kalman3()
+        self.kalman_filter = Kalman3(trading_pairs=BUSD_TRADING_PAIRS)
 
     def main(self):
         while True:
@@ -52,6 +53,7 @@ class Application:
 
             #loop = asyncio.get_event_loop()
             #loop.run_until_complete(asyncio.sleep(int(CONFIGURATION.SLEEP)))
+
 
     def update(self):
         for _, asset in self.assets.items():

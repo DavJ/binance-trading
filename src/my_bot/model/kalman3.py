@@ -65,6 +65,14 @@ class Kalman3:
        """
        return self.results_smoothed[-1]
 
+    @classmethod
+    def sorting_criteria(cls, x):
+        try:
+            return abs(x[1] / x[2])  # bigger the difference from avg, smaller the change (first derivative)
+
+        except ZeroDivisionError:
+            return np.Infinity  # zero second derivative means min or max was reached => prioritize trade
+
     @property
     def sorted_predictions(self):
        """
@@ -72,19 +80,13 @@ class Kalman3:
        and second derivative is close to 0
        :return:
        """
-       def sorting_criteria(x):
-           try:
-               return abs(x[1]/x[2])  # bigger the difference from avg, smaller the change (first derivative)
-
-           except ZeroDivisionError:
-               return np.Infinity          #zero second derivative means min or max was reached => prioritize trade
 
        return sorted([(self.trading_pairs[i],
                        self.results_smoothed[-1][i], #average predicted
                        self.results_smoothed[-1][i + self.number_of_pairs],  #first derivative predicted
                        self.results_smoothed[-1][i + 2*self.number_of_pairs]  #second derivative predicted
                        ) for i in range(self.number_of_pairs)],
-                     key=sorting_criteria, reverse=True)
+                     key=Kalman3.sorting_criteria, reverse=True)
 
     def dump_sorted(self):
        print('sorted predictions')
